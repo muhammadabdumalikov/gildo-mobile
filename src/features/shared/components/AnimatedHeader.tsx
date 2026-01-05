@@ -6,11 +6,8 @@ import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
     Extrapolation,
     interpolate,
-    runOnJS,
     SharedValue,
-    useAnimatedReaction,
     useAnimatedStyle,
-    useDerivedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography } from './theme';
@@ -39,11 +36,10 @@ export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   showBackButton = false,
   onBackPress,
   showBottomBorder = false,
-  blurHeader = true,
+  blurHeader = false,
 }) => {
   const insets = useSafeAreaInsets();
   const scrollDistance = maxHeight - minHeight;
-  const [iconSize, setIconSize] = React.useState(24);
 
   const handleBackPress = () => {
     if (onBackPress) {
@@ -163,47 +159,26 @@ export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
       Extrapolation.CLAMP
     );
 
-    const scale = interpolate(
+    const translateX = interpolate(
       scrollY.value,
       [0, scrollDistance / 2, scrollDistance],
-      [1, 0.85, 0.7],
+      [0, -20, -60], // Move to the left while scrolling
       Extrapolation.CLAMP
     );
 
-    const buttonSize = interpolate(
+    // Compensate for header height change to keep vertical position fixed
+    const translateY = interpolate(
       scrollY.value,
-      [0, scrollDistance / 2, scrollDistance],
-      [40, 36, 32],
+      [0, scrollDistance],
+      [0, scrollDistance], // Move down by the same amount header shrinks
       Extrapolation.CLAMP
     );
 
     return {
       opacity,
-      width: buttonSize,
-      height: buttonSize,
-      transform: [{ scale }],
+      transform: [{ translateX }, { translateY }],
     };
   });
-
-  const animatedIconSize = useDerivedValue(() => {
-    return interpolate(
-      scrollY.value,
-      [0, scrollDistance / 2, scrollDistance],
-      [24, 20, 16],
-      Extrapolation.CLAMP
-    );
-  });
-
-  const updateIconSize = React.useCallback((size: number) => {
-    setIconSize(Math.round(size));
-  }, []);
-
-  useAnimatedReaction(
-    () => animatedIconSize.value,
-    (current) => {
-      runOnJS(updateIconSize)(current);
-    }
-  );
 
   return (
     <Animated.View 
@@ -229,7 +204,7 @@ export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
             activeOpacity={0.7}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <IconSymbol name="chevron.left" size={iconSize} color={Colors.textPrimary} />
+            <IconSymbol name="chevron.left" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -278,8 +253,12 @@ const styles = StyleSheet.create({
     zIndex: 1001,
     alignItems: 'center',
     justifyContent: 'center',
+    // Keep vertical position fixed - don't move with header collapse
+    alignSelf: 'flex-end',
   },
   backButton: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 20,

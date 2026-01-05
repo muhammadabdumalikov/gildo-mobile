@@ -125,6 +125,9 @@ export default function MedicationFormScreen() {
         await updateMedication(medication, [schedule]);
       }
 
+      // Add minimum delay to show loading animation (at least 2 seconds for one full cycle)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       router.back();
     } catch (error) {
       console.error('Error saving medication:', error);

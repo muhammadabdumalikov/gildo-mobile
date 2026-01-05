@@ -64,6 +64,9 @@ export default function EditProfileScreen() {
         profileImageUri: profileImage,
       });
 
+      // Add minimum delay to show loading animation (at least 2 seconds for one full cycle)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       Alert.alert('Success', 'Profile updated successfully', [
         { text: 'OK', onPress: () => router.back() },
       ]);
