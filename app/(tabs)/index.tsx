@@ -1,98 +1,146 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useAppStore, useMedicationStore } from '@/src/core/store';
+import { MedicationSchedule, MedicationWithSchedules } from '@/src/core/types';
+import {
+  Colors,
+  HeaderCard,
+  PillCard,
+  Spacing,
+  TimeSlot,
+  Typography,
+} from '@/src/features/shared/components';
+import { router } from 'expo-router';
+import React, { useEffect, useMemo } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+interface MedicationByTime {
+  [time: string]: Array<{
+    medication: MedicationWithSchedules;
+    schedule: MedicationSchedule;
+  }>;
+}
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { userName, profileImageUri } = useAppStore();
+  const { medications, loadMedications, isLoading } = useMedicationStore();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    loadMedications();
+  }, []);
+
+  // Group medications by time
+  const medicationsByTime = useMemo(() => {
+    const grouped: MedicationByTime = {};
+    const today = new Date().getDay(); // 0 = Sunday, 6 = Saturday
+
+    medications.forEach((medication) => {
+      medication.schedules.forEach((schedule) => {
+        // Only show active schedules for today
+        if (schedule.isActive && schedule.daysOfWeek.includes(today)) {
+          if (!grouped[schedule.time]) {
+            grouped[schedule.time] = [];
+          }
+          grouped[schedule.time].push({ medication, schedule });
+        }
+      });
+    });
+
+    // Sort times
+    const sortedTimes = Object.keys(grouped).sort();
+    const sortedGrouped: MedicationByTime = {};
+    sortedTimes.forEach((time) => {
+      sortedGrouped[time] = grouped[time];
+    });
+
+    return sortedGrouped;
+  }, [medications]);
+
+
+  const handleMedicationPress = (medicationId: string) => {
+    router.push(`/medication/${medicationId}`);
+  };
+
+  const handleRefresh = async () => {
+    await loadMedications();
+  };
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyTitle}>No medications for today</Text>
+      <Text style={styles.emptySubtitle}>
+        Tap the + button below to add your first medication reminder
+      </Text>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
+        }
+      >
+        <HeaderCard userName={userName} profileImageUri={profileImageUri} />
+
+        {Object.keys(medicationsByTime).length === 0 ? (
+          renderEmptyState()
+        ) : (
+          Object.entries(medicationsByTime).map(([time, items]) => (
+            <View key={time}>
+              <TimeSlot time={time} />
+              {items.map(({ medication, schedule }) => (
+                <PillCard
+                  key={`${medication.id}-${schedule.id}`}
+                  medication={medication}
+                  scheduleTime={schedule.time}
+                  onPress={() => handleMedicationPress(medication.id)}
+              />
+              ))}
+            </View>
+          ))
+        )}
+
+        {/* Bottom padding for tab bar */}
+        <View style={styles.bottomPadding} />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: Spacing.lg,
+    paddingBottom: 120, // Extra space for custom tab bar
+  },
+  emptyContainer: {
+    flex: 1,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: Spacing.xl,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  emptyTitle: {
+    ...Typography.subheader,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+    textAlign: 'center',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  emptySubtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  bottomPadding: {
+    height: 20,
   },
 });
