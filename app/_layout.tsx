@@ -94,6 +94,13 @@ export default function RootLayout() {
           }} 
         />
         <Stack.Screen 
+          name="task/[id]" 
+          options={{ 
+            headerShown: false,
+            presentation: 'modal',
+          }} 
+        />
+        <Stack.Screen 
           name="profile/edit" 
           options={{ 
             title: 'Edit Profile',

@@ -37,7 +37,7 @@ const FEATURES: FeatureOption[] = [
     iconName: 'list-check',
     iconLibrary: 'FontAwesome6',
     iconColor: '#66BB6A',
-    disabled: true,
+    route: '/task/new',
   },
   {
     id: 'wishlist',
