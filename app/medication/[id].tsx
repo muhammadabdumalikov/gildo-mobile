@@ -6,6 +6,8 @@ import {
   ColorPicker,
   Colors,
   DaySelector,
+  FrequencySelector,
+  FrequencyType,
   Input,
   Picker,
   Spacing,
@@ -36,6 +38,7 @@ export default function MedicationFormScreen() {
   const [pillShape, setPillShape] = useState<PillShape>('round');
   const [quantity, setQuantity] = useState('1');
   const [timing, setTiming] = useState<PillTiming>('before_meal');
+  const [frequency, setFrequency] = useState<FrequencyType>('every_day');
   const [time, setTime] = useState('08:00');
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]); // All days
   const [loading, setLoading] = useState(false);
@@ -82,11 +85,32 @@ export default function MedicationFormScreen() {
       Alert.alert('Error', 'Please enter a valid quantity');
       return false;
     }
-    if (daysOfWeek.length === 0) {
+    // Only validate daysOfWeek if frequency is 'particular_days'
+    if (frequency === 'particular_days' && daysOfWeek.length === 0) {
       Alert.alert('Error', 'Please select at least one day');
       return false;
     }
     return true;
+  };
+
+  // Handle frequency change
+  const handleFrequencyChange = (newFrequency: FrequencyType) => {
+    setFrequency(newFrequency);
+    
+    // Auto-set days based on frequency
+    if (newFrequency === 'every_day') {
+      setDaysOfWeek([0, 1, 2, 3, 4, 5, 6]); // All days
+    } else if (newFrequency === 'one_time') {
+      // For one-time dose, set to today's day
+      const today = new Date().getDay();
+      setDaysOfWeek([today]);
+    } else if (newFrequency === 'particular_days') {
+      // Keep current selection or default to all days
+      if (daysOfWeek.length === 0) {
+        setDaysOfWeek([0, 1, 2, 3, 4, 5, 6]);
+      }
+    }
+    // For 'every_x_days', we might need additional input in the future
   };
 
   const handleSave = async () => {
@@ -109,11 +133,21 @@ export default function MedicationFormScreen() {
         updatedAt: now,
       };
 
+      // Determine daysOfWeek based on frequency
+      let scheduleDaysOfWeek: number[] = daysOfWeek;
+      if (frequency === 'every_day') {
+        scheduleDaysOfWeek = [0, 1, 2, 3, 4, 5, 6];
+      } else if (frequency === 'one_time') {
+        // For one-time, use current day or provided days
+        scheduleDaysOfWeek = daysOfWeek.length > 0 ? daysOfWeek : [new Date().getDay()];
+      }
+      // For 'particular_days' and 'every_x_days', use the selected days
+
       const schedule: MedicationSchedule = {
         id: `sched_${now}`,
         medicationId,
         time,
-        daysOfWeek,
+        daysOfWeek: scheduleDaysOfWeek,
         isActive: true,
         createdAt: now,
         updatedAt: now,
@@ -245,17 +279,25 @@ export default function MedicationFormScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Reminder Schedule</Text>
           
+          <FrequencySelector
+            label="Frequency"
+            value={frequency}
+            onValueChange={handleFrequencyChange}
+          />
+          
           <TimePicker
             label="Time"
             value={time}
             onValueChange={setTime}
           />
 
-          <DaySelector
-            label="Days of Week"
-            selectedDays={daysOfWeek}
-            onSelectDays={setDaysOfWeek}
-          />
+          {frequency === 'particular_days' && (
+            <DaySelector
+              label="Days of Week"
+              selectedDays={daysOfWeek}
+              onSelectDays={setDaysOfWeek}
+            />
+          )}
         </View>
 
         <View style={styles.buttonContainer}>

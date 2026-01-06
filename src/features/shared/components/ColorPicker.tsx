@@ -1,5 +1,6 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ColorPickerModal } from "./ColorPickerModal";
 import { Colors, Spacing } from "./theme";
 
 interface ColorPickerProps {
@@ -22,6 +23,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   selectedColor,
   onSelectColor,
 }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const isPresetColor = PILL_COLORS.some((color) => color.value === selectedColor);
+
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -42,7 +47,35 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             </Pressable>
           </View>
         ))}
+        
+        {/* Custom Color Button */}
+        <View style={styles.colorOptionWrapper}>
+          <View style={styles.colorShadowBox} />
+          <TouchableOpacity
+            style={[styles.colorOption, styles.customColorButton]}
+            onPress={() => setModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            {!isPresetColor && (
+              <View style={[styles.customColorPreview, { backgroundColor: selectedColor }]} />
+            )}
+            {isPresetColor ? (
+              <Text style={styles.plusIcon}>+</Text>
+            ) : (
+              <View style={styles.checkmark}>
+                <Text style={styles.checkmarkText}>✓</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
+
+      <ColorPickerModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        selectedColor={selectedColor}
+        onColorSelect={onSelectColor}
+      />
     </View>
   );
 };
@@ -65,6 +98,7 @@ const styles = StyleSheet.create({
   },
   colorOptionWrapper: {
     position: "relative",
+    overflow: "visible",
   },
   colorShadowBox: {
     position: "absolute",
@@ -89,15 +123,29 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   checkmarkText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
     color: Colors.textPrimary,
+  },
+  customColorButton: {
+    backgroundColor: Colors.cardBackground,
+    borderStyle: "dashed",
+  },
+  customColorPreview: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 3,
+  },
+  plusIcon: {
+    fontSize: 24,
+    fontWeight: "300",
+    color: Colors.textSecondary,
   },
 });

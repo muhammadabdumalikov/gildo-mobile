@@ -1,9 +1,28 @@
 // Fallback for using MaterialIcons on Android and web.
+// Supports all Expo vector icon libraries.
 
+import * as VectorIcons from '@expo/vector-icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
-import { ComponentProps } from 'react';
-import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
+import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
+import React, { ComponentProps } from 'react';
+import { OpaqueColorValue, Platform, type StyleProp, type TextStyle } from 'react-native';
+
+// Available icon libraries from @expo/vector-icons
+export type IconLibrary = 
+  | 'MaterialIcons'
+  | 'MaterialCommunityIcons'
+  | 'Ionicons'
+  | 'FontAwesome'
+  | 'FontAwesome5'
+  | 'FontAwesome6'
+  | 'AntDesign'
+  | 'Entypo'
+  | 'EvilIcons'
+  | 'Feather'
+  | 'Foundation'
+  | 'Octicons'
+  | 'SimpleLineIcons'
+  | 'Zocial';
 
 type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
 type IconSymbolName = keyof typeof MAPPING;
@@ -39,22 +58,61 @@ const MAPPING = {
   'info.circle.fill': 'info',
 } as IconMapping;
 
+interface IconSymbolProps {
+  name: IconSymbolName | string; // Allow string for custom icon names when using library prop
+  size?: number;
+  color: string | OpaqueColorValue;
+  style?: StyleProp<TextStyle>;
+  weight?: SymbolWeight;
+  library?: IconLibrary; // Optional: specify icon library directly
+}
+
 /**
- * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
- * This ensures a consistent look across platforms, and optimal resource usage.
- * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
+ * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web by default.
+ * 
+ * If `library` prop is provided, it will use that specific icon library from @expo/vector-icons
+ * and `name` should be the icon name from that library (e.g., 'heart' for FontAwesome, 'ios-heart' for Ionicons).
+ * 
+ * If `library` is not provided, it uses the default behavior:
+ * - iOS: SF Symbols (via expo-symbols)
+ * - Android/Web: Material Icons (mapped from SF Symbols)
+ * 
+ * Examples:
+ * - <IconSymbol name="heart" library="FontAwesome" />
+ * - <IconSymbol name="ios-heart" library="Ionicons" />
+ * - <IconSymbol name="house.fill" /> (uses default SF Symbols mapping)
  */
 export function IconSymbol({
   name,
   size = 24,
   color,
   style,
-}: {
-  name: IconSymbolName;
-  size?: number;
-  color: string | OpaqueColorValue;
-  style?: StyleProp<TextStyle>;
-  weight?: SymbolWeight;
-}) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  library,
+}: IconSymbolProps) {
+  // If library is specified, use that library directly
+  if (library) {
+    const IconComponent = VectorIcons[library] as React.ComponentType<{
+      name: string;
+      size?: number;
+      color?: string | OpaqueColorValue;
+      style?: StyleProp<TextStyle>;
+    }>;
+    
+    if (!IconComponent) {
+      console.warn(`Icon library "${library}" not found. Falling back to MaterialIcons.`);
+      return <MaterialIcons color={color} size={size} name={name as any} style={style} />;
+    }
+    
+    return <IconComponent name={name as string} color={color} size={size} style={style} />;
+  }
+
+  // Default behavior: SF Symbols on iOS, MaterialIcons on Android/web
+  // This maintains backward compatibility
+  if (Platform.OS === 'ios') {
+    // On iOS, we should use SF Symbols, but for now fall back to MaterialIcons
+    // The iOS-specific file (icon-symbol.ios.tsx) will handle SF Symbols
+    return <MaterialIcons color={color} size={size} name={MAPPING[name as IconSymbolName]} style={style} />;
+  }
+
+  return <MaterialIcons color={color} size={size} name={MAPPING[name as IconSymbolName]} style={style} />;
 }

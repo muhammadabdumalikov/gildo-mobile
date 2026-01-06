@@ -1,3 +1,4 @@
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import React from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors, Spacing, Typography } from './theme';
@@ -92,7 +93,7 @@ export const Picker: React.FC<PickerProps> = ({
                     {option.label}
                   </Text>
                   {value === option.value && (
-                    <Text style={styles.checkmark}>✓</Text>
+                    <Text style={styles.checkmark}><IconSymbol name="checkmark" color={Colors.primary} /></Text>
                   )}
                 </TouchableOpacity>
               ))}
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     fontFamily: 'Montserrat_600SemiBold',
-    color: Colors.textPrimary, // font-color
+    color: Colors.inputBorder, // font-color matching input style
   },
   placeholderText: {
     color: 'rgba(102, 102, 102, 0.8)', // font-color-sub with 0.8 opacity
@@ -164,20 +165,25 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: Colors.cardBackground,
-    borderRadius: 16,
+    borderRadius: 5, // Match input border radius
     maxHeight: '70%',
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.inputBorder,
   },
   modalTitle: {
     ...Typography.title,
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
     color: Colors.textPrimary,
   },
   closeButton: {
@@ -200,17 +206,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   optionText: {
-    ...Typography.body,
+    fontSize: 15,
+    fontFamily: 'Montserrat_400Regular',
     color: Colors.textPrimary,
   },
   selectedOptionText: {
+    fontSize: 15,
     fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
     color: Colors.primary,
   },
   checkmark: {
     fontSize: 18,
     color: Colors.primary,
     fontWeight: '700',
+    fontFamily: 'Montserrat_700Bold',
   },
 });
 
