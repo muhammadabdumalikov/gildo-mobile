@@ -3,15 +3,17 @@ import {
     AnimatedHeader,
     Button,
     Colors,
+    createAlertHelpers,
     DatePicker,
     Input,
     Picker,
     ProfileImagePicker,
-    Spacing
+    Spacing,
+    useAlertModal
 } from '@/src/features/shared/components';
 import { router, Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import Animated, {
     useAnimatedScrollHandler,
     useSharedValue,
@@ -32,6 +34,10 @@ export default function EditProfileScreen() {
   const [profileImage, setProfileImage] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
 
+  // Alert modal
+  const { showAlert, AlertModal } = useAlertModal();
+  const alert = createAlertHelpers(showAlert);
+  
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
@@ -50,7 +56,7 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter your name');
+      alert.alert('Alert', 'Please enter your name');
       return;
     }
 
@@ -67,12 +73,12 @@ export default function EditProfileScreen() {
       // Add minimum delay to show loading animation (at least 2 seconds for one full cycle)
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      Alert.alert('Success', 'Profile updated successfully', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      alert.success('Success', 'Profile updated successfully', () => {
+        router.back();
+      });
     } catch (error) {
       console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to save profile. Please try again.');
+      alert.error('Error', 'Failed to save profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -106,7 +112,7 @@ export default function EditProfileScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: 120 + insets.top }, // Account for header max height + safe area
+          { paddingTop: 120 + 30 },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -184,6 +190,7 @@ export default function EditProfileScreen() {
           />
         </View>
       </Animated.ScrollView>
+      {AlertModal}
     </KeyboardAvoidingView>
   );
 }

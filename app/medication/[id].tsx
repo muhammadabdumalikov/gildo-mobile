@@ -1,10 +1,16 @@
-import { useMedicationStore } from '@/src/core/store';
-import { Medication, MedicationSchedule, PillShape, PillTiming } from '@/src/core/types';
+import { useMedicationStore } from "@/src/core/store";
+import {
+  Medication,
+  MedicationSchedule,
+  PillShape,
+  PillTiming,
+} from "@/src/core/types";
 import {
   AnimatedHeader,
   Button,
   ColorPicker,
   Colors,
+  createAlertHelpers,
   DaySelector,
   FrequencySelector,
   FrequencyType,
@@ -12,34 +18,50 @@ import {
   Picker,
   Spacing,
   TimePicker,
-  Typography
-} from '@/src/features/shared/components';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+  Typography,
+  useAlertModal,
+} from "@/src/features/shared/components";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function MedicationFormScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const isNew = id === 'new';
-  
-  const { getMedicationById, addMedication, updateMedication, deleteMedication } = useMedicationStore();
+  const isNew = id === "new";
+
+  const {
+    getMedicationById,
+    addMedication,
+    updateMedication,
+    deleteMedication,
+  } = useMedicationStore();
   const scrollY = useSharedValue(0);
   const insets = useSafeAreaInsets();
 
+  // Alert modal
+  const { showAlert, AlertModal } = useAlertModal();
+  const alert = createAlertHelpers(showAlert);
+
   // Form state
-  const [name, setName] = useState('');
-  const [dosage, setDosage] = useState('');
+  const [name, setName] = useState("");
+  const [dosage, setDosage] = useState("");
   const [pillColor, setPillColor] = useState(Colors.pillYellow);
-  const [pillShape, setPillShape] = useState<PillShape>('round');
-  const [quantity, setQuantity] = useState('1');
-  const [timing, setTiming] = useState<PillTiming>('before_meal');
-  const [frequency, setFrequency] = useState<FrequencyType>('every_day');
-  const [time, setTime] = useState('08:00');
+  const [pillShape, setPillShape] = useState<PillShape>("round");
+  const [quantity, setQuantity] = useState("1");
+  const [timing, setTiming] = useState<PillTiming>("before_meal");
+  const [frequency, setFrequency] = useState<FrequencyType>("every_day");
+  const [time, setTime] = useState("08:00");
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]); // All days
   const [loading, setLoading] = useState(false);
 
@@ -60,7 +82,7 @@ export default function MedicationFormScreen() {
         setPillShape(medication.pillShape);
         setQuantity(medication.quantity.toString());
         setTiming(medication.timing);
-        
+
         // Load first schedule if exists
         if (medication.schedules.length > 0) {
           const firstSchedule = medication.schedules[0];
@@ -73,21 +95,21 @@ export default function MedicationFormScreen() {
 
   const validateForm = (): boolean => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter medication name');
+      alert.alert("Alert", "Please enter medication name");
       return false;
     }
     if (!dosage.trim()) {
-      Alert.alert('Error', 'Please enter dosage');
+      alert.alert("Alert", "Please enter dosage");
       return false;
     }
     const quantityNum = parseInt(quantity);
     if (isNaN(quantityNum) || quantityNum < 1) {
-      Alert.alert('Error', 'Please enter a valid quantity');
+      alert.alert("Alert", "Please enter a valid quantity");
       return false;
     }
     // Only validate daysOfWeek if frequency is 'particular_days'
-    if (frequency === 'particular_days' && daysOfWeek.length === 0) {
-      Alert.alert('Error', 'Please select at least one day');
+    if (frequency === "particular_days" && daysOfWeek.length === 0) {
+      alert.alert("Alert", "Please select at least one day");
       return false;
     }
     return true;
@@ -96,15 +118,15 @@ export default function MedicationFormScreen() {
   // Handle frequency change
   const handleFrequencyChange = (newFrequency: FrequencyType) => {
     setFrequency(newFrequency);
-    
+
     // Auto-set days based on frequency
-    if (newFrequency === 'every_day') {
+    if (newFrequency === "every_day") {
       setDaysOfWeek([0, 1, 2, 3, 4, 5, 6]); // All days
-    } else if (newFrequency === 'one_time') {
+    } else if (newFrequency === "one_time") {
       // For one-time dose, set to today's day
       const today = new Date().getDay();
       setDaysOfWeek([today]);
-    } else if (newFrequency === 'particular_days') {
+    } else if (newFrequency === "particular_days") {
       // Keep current selection or default to all days
       if (daysOfWeek.length === 0) {
         setDaysOfWeek([0, 1, 2, 3, 4, 5, 6]);
@@ -135,11 +157,12 @@ export default function MedicationFormScreen() {
 
       // Determine daysOfWeek based on frequency
       let scheduleDaysOfWeek: number[] = daysOfWeek;
-      if (frequency === 'every_day') {
+      if (frequency === "every_day") {
         scheduleDaysOfWeek = [0, 1, 2, 3, 4, 5, 6];
-      } else if (frequency === 'one_time') {
+      } else if (frequency === "one_time") {
         // For one-time, use current day or provided days
-        scheduleDaysOfWeek = daysOfWeek.length > 0 ? daysOfWeek : [new Date().getDay()];
+        scheduleDaysOfWeek =
+          daysOfWeek.length > 0 ? daysOfWeek : [new Date().getDay()];
       }
       // For 'particular_days' and 'every_x_days', use the selected days
 
@@ -160,47 +183,48 @@ export default function MedicationFormScreen() {
       }
 
       // Add minimum delay to show loading animation (at least 2 seconds for one full cycle)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      router.back();
-    } catch (error) {
-      console.error('Error saving medication:', error);
-      Alert.alert('Error', 'Failed to save medication. Please try again.');
-    } finally {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      
       setLoading(false);
+
+      alert.success(
+        "Success!",
+        isNew ? "Medication added successfully." : "Medication updated successfully.",
+        () => {
+          router.back();
+        }
+      );
+    } catch (error) {
+      console.error("Error saving medication:", error);
+      setLoading(false);
+      alert.error("Error", "Failed to save medication. Please try again.");
     }
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      'Delete Medication',
-      'Are you sure you want to delete this medication? This will also remove all reminders.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await deleteMedication(id);
-              router.back();
-            } catch (error) {
-              console.error('Error deleting medication:', error);
-              Alert.alert('Error', 'Failed to delete medication. Please try again.');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
+    alert.error(
+      "Delete Medication",
+      "Are you sure you want to delete this medication? This will also remove all reminders.",
+      async () => {
+        setLoading(true);
+        try {
+          await deleteMedication(id);
+          alert.success("Deleted", "Medication deleted successfully.", () => {
+            router.back();
+          });
+        } catch (error) {
+          console.error("Error deleting medication:", error);
+          alert.error("Error", "Failed to delete medication. Please try again.");
+          setLoading(false);
+        }
+      }
     );
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen
         options={{
@@ -208,9 +232,9 @@ export default function MedicationFormScreen() {
         }}
       />
 
-      <AnimatedHeader 
-        title={isNew ? 'Add Medication' : 'Edit Medication'} 
-        scrollY={scrollY} 
+      <AnimatedHeader
+        title={isNew ? "Add Medication" : "Edit Medication"}
+        scrollY={scrollY}
         blurHeader={false}
         showBottomBorder={true}
       />
@@ -219,7 +243,7 @@ export default function MedicationFormScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: 120 + insets.top }, // Account for header max height + safe area
+          { paddingTop: 120 + 30 },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -247,67 +271,73 @@ export default function MedicationFormScreen() {
           onSelectColor={setPillColor}
         />
 
-        <Picker
-          label="Pill Shape"
-          value={pillShape}
-          options={[
-            { label: 'Round Pill', value: 'round' },
-            { label: 'Capsule', value: 'capsule' },
-          ]}
-          onValueChange={(value) => setPillShape(value as PillShape)}
-        />
-
-        <Input
-          label="Quantity"
-          placeholder="Number of pills"
-          value={quantity}
-          onChangeText={setQuantity}
-          keyboardType="number-pad"
-        />
-
-        <Picker
-          label="Timing"
-          value={timing}
-          options={[
-            { label: 'Before Meal', value: 'before_meal' },
-            { label: 'After Meal', value: 'after_meal' },
-            { label: 'With Meal', value: 'with_meal' },
-          ]}
-          onValueChange={(value) => setTiming(value as PillTiming)}
-        />
+        <View style={styles.rowContainer}>
+          <View style={styles.halfWidth}>
+            <Picker
+              label="Pill Shape"
+              value={pillShape}
+              options={[
+                { label: "Round Pill", value: "round" },
+                { label: "Capsule", value: "capsule" },
+              ]}
+              onValueChange={(value) => setPillShape(value as PillShape)}
+            />
+          </View>
+          <View style={styles.halfWidth}>
+            <Input
+              label="Quantity"
+              placeholder="Number of pills"
+              value={quantity}
+              onChangeText={setQuantity}
+              keyboardType="number-pad"
+            />
+          </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Reminder Schedule</Text>
-          
+
           <FrequencySelector
             label="Frequency"
             value={frequency}
             onValueChange={handleFrequencyChange}
           />
-          
-          <TimePicker
-            label="Time"
-            value={time}
-            onValueChange={setTime}
-          />
 
-          {frequency === 'particular_days' && (
+          {frequency === "particular_days" && (
             <DaySelector
               label="Days of Week"
               selectedDays={daysOfWeek}
               onSelectDays={setDaysOfWeek}
             />
           )}
+
+          <View style={styles.rowContainer}>
+            <View style={styles.halfWidth}>
+              <TimePicker label="Time" value={time} onValueChange={setTime} />
+            </View>
+            <View style={styles.halfWidth}>
+              <Picker
+                label="Timing"
+                value={timing}
+                options={[
+                  { label: "Before Meal", value: "before_meal" },
+                  { label: "After Meal", value: "after_meal" },
+                  { label: "With Meal", value: "with_meal" },
+                ]}
+                onValueChange={(value) => setTiming(value as PillTiming)}
+              />
+            </View>
+          </View>
         </View>
 
         <View style={styles.buttonContainer}>
           <Button
-            title={isNew ? 'Add Medication' : 'Save Changes'}
+            title={isNew ? "Add Medication" : "Save Changes"}
             onPress={handleSave}
             loading={loading}
             fullWidth
           />
-          
+
           {!isNew && (
             <Button
               title="Delete Medication"
@@ -319,6 +349,7 @@ export default function MedicationFormScreen() {
           )}
         </View>
       </Animated.ScrollView>
+      {AlertModal}
     </KeyboardAvoidingView>
   );
 }
@@ -333,7 +364,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.lg,
-    paddingBottom: 40,
+    paddingBottom: 80,
   },
   section: {
     marginTop: Spacing.lg,
@@ -347,5 +378,12 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xxl,
     gap: Spacing.md,
   },
+  rowContainer: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
+  },
+  halfWidth: {
+    flex: 1,
+  },
 });
-

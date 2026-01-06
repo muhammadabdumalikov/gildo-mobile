@@ -1,3 +1,4 @@
+export * from './AlertModal';
 export * from './AnimatedHeader';
 export * from './Button';
 export * from './ColorPicker';
@@ -19,4 +20,5 @@ export * from './SettingsItem';
 export * from './theme';
 export * from './TimePicker';
 export * from './TimeSlot';
+export * from './useAlertModal';
 

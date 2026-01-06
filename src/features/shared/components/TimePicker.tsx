@@ -15,9 +15,9 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')
 // Generate minutes (00-59)
 const MINUTES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
-const ITEM_HEIGHT = 50;
-const VISIBLE_ITEMS = 5;
-const LABEL_HEIGHT = 30;
+const ITEM_HEIGHT = 45;
+const VISIBLE_ITEMS = 4;
+const LABEL_HEIGHT = 28;
 
 const PickerColumn = React.memo(({ 
   data, 
@@ -296,6 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     padding: Spacing.xl,
+    alignItems: 'center',
   },
   modalContent: {
     backgroundColor: Colors.cardBackground,
@@ -303,6 +304,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: Colors.inputBorder,
+    maxWidth: 320,
+    width: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -350,7 +353,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Montserrat_600SemiBold',
     color: Colors.textSecondary,
     fontWeight: '600',
@@ -373,12 +376,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   pickerItemText: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Montserrat_400Regular',
     color: Colors.textSecondary,
   },
   pickerItemTextSelected: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: 'Montserrat_700Bold',
     fontWeight: '700',
     color: Colors.primary,
@@ -391,7 +394,7 @@ const styles = StyleSheet.create({
     marginTop: LABEL_HEIGHT + ITEM_HEIGHT * 2,
   },
   separatorText: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Montserrat_700Bold',
     color: Colors.textPrimary,
     fontWeight: '700',

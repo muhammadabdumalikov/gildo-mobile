@@ -7,20 +7,20 @@ import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { BorderRadius, Colors } from './theme';
 
 type IconSymbolName = 
-  | 'checkmark.circle.fill'
-  | 'cube.box.fill'
-  | 'calendar.badge.checkmark'
-  | 'person.fill'
-  | 'house.fill'
+  | 'list'
+  | 'box-archive'
+  | 'calendar-days'
+  | 'user'
+  | 'home'
   | 'circle.fill';
 
 type RouteName = 'index' | 'archive' | 'calendar' | 'profile';
 
 const routeIconMap: Record<RouteName, IconSymbolName> = {
-  index: 'checkmark.circle.fill', // Tasks/Home
-  archive: 'cube.box.fill', // Archive/Box
-  calendar: 'calendar.badge.checkmark', // Calendar
-  profile: 'person.fill', // Profile
+  index: 'list', // Tasks/Home
+  archive: 'box-archive', // Archive/Box
+  calendar: 'calendar-days', // Calendar
+  profile: 'user', // Profile
 };
 
 export const CustomTabBar: React.FC<BottomTabBarProps> = ({
@@ -86,6 +86,7 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
             <IconSymbol
               size={24}
               name={iconName}
+              library="FontAwesome6"
               color={isFocused ? Colors.cardBackground : Colors.textSecondary}
             />
           </View>
