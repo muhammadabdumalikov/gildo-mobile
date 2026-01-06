@@ -1,7 +1,5 @@
-import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
 import { CustomTabBar } from '@/src/features/shared/components/CustomTabBar';
-import { Colors } from '@/src/features/shared/components';
+import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
   return (
@@ -20,9 +18,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="archive"
+        name="features"
         options={{
-          title: 'Archive',
+          title: 'Features',
           tabBarButton: () => null,
         }}
       />

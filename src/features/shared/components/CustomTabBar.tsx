@@ -1,24 +1,24 @@
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { IconLibrary, IconSymbol } from '@/components/ui/icon-symbol';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FeatureSelectionModal } from './FeatureSelectionModal';
 import { BorderRadius, Colors } from './theme';
 
 type IconSymbolName = 
   | 'list'
-  | 'box-archive'
+  | 'apps'
   | 'calendar-days'
   | 'user'
   | 'home'
   | 'circle.fill';
 
-type RouteName = 'index' | 'archive' | 'calendar' | 'profile';
+type RouteName = 'index' | 'features' | 'calendar' | 'profile';
 
 const routeIconMap: Record<RouteName, IconSymbolName> = {
   index: 'list', // Tasks/Home
-  archive: 'box-archive', // Archive/Box
+  features: 'apps', // Features/Box
   calendar: 'calendar-days', // Calendar
   profile: 'user', // Profile
 };
@@ -28,11 +28,17 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
   descriptors,
   navigation,
 }) => {
+  const [showFeatureModal, setShowFeatureModal] = useState(false);
+
   const handleAddPress = () => {
     if (Platform.OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.push('/medication/new');
+    setShowFeatureModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowFeatureModal(false);
   };
 
   const handleTabPress = (
@@ -69,6 +75,15 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
     const isFocused = state.index === routeIndex;
     const routeName = route.name as RouteName;
     const iconName: IconSymbolName = routeIconMap[routeName] || 'circle.fill';
+    let library: IconLibrary = 'FontAwesome6';
+    let size = 24;
+    
+    switch (routeName) {
+      case 'features':
+        library = 'Octicons';
+        size = 26;
+        break;
+    }
 
     return (
       <TouchableOpacity
@@ -84,9 +99,9 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
           {isFocused && <View style={styles.tabIconShadowBox} />}
           <View style={[styles.tabIconContainer, isFocused && styles.tabIconContainerActive]}>
             <IconSymbol
-              size={24}
+              size={size}
               name={iconName}
-              library="FontAwesome6"
+              library={library}
               color={isFocused ? Colors.cardBackground : Colors.textSecondary}
             />
           </View>
@@ -127,6 +142,11 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
           {secondHalf.map((route) => renderTabButton(route))}
         </View>
       </View>
+
+      <FeatureSelectionModal
+        visible={showFeatureModal}
+        onClose={handleCloseModal}
+      />
     </View>
   );
 };

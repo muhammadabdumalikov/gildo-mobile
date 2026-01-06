@@ -91,12 +91,12 @@ export function IconSymbol({
 }: IconSymbolProps) {
   // If library is specified, use that library directly
   if (library) {
-    const IconComponent = VectorIcons[library] as React.ComponentType<{
+    const IconComponent = (VectorIcons as Record<IconLibrary, React.ComponentType<{
       name: string;
       size?: number;
       color?: string | OpaqueColorValue;
       style?: StyleProp<TextStyle>;
-    }>;
+    }>>)[library];
     
     if (!IconComponent) {
       console.warn(`Icon library "${library}" not found. Falling back to MaterialIcons.`);
