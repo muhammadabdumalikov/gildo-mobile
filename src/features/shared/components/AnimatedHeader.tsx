@@ -279,14 +279,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 6, // Height for border + shadow (similar to input)
+    height: 4, // Height for border + shadow (similar to input)
   },
   borderShadow: {
     position: 'absolute',
-    bottom: -4, // Shadow offset 4px down (matching input shadow)
+    bottom: -3, // Shadow offset 4px down (matching input shadow)
     left: 4, // Shadow offset 4px right (matching input shadow)
     right: -4,
-    height: 4,
+    height: 3,
     backgroundColor: Colors.inputBorder, // Shadow color matching input
     borderBottomLeftRadius: 5,
   },

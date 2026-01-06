@@ -27,6 +27,7 @@ export const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
 }) => {
   const progress = useSharedValue(0);
+  const isPressed = useSharedValue(0); // 0 = not pressed, 1 = pressed
 
   React.useEffect(() => {
     if (loading) {
@@ -109,22 +110,67 @@ export const Button: React.FC<ButtonProps> = ({
     };
   });
 
+  const buttonAnimatedStyle = useAnimatedStyle(() => {
+    const translateX = interpolate(
+      isPressed.value,
+      [0, 1],
+      [-4, 0],
+      'clamp'
+    );
+    const translateY = interpolate(
+      isPressed.value,
+      [0, 1],
+      [-4, 0],
+      'clamp'
+    );
+    
+    return {
+      transform: [{ translateX }, { translateY }],
+    };
+  });
+
+  const shadowAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      isPressed.value,
+      [0, 1],
+      [1, 0],
+      'clamp'
+    );
+    
+    return {
+      opacity,
+    };
+  });
+
+  const handlePressIn = () => {
+    if (!disabled && !loading) {
+      isPressed.value = withTiming(1, { duration: 150 });
+    }
+  };
+
+  const handlePressOut = () => {
+    isPressed.value = withTiming(0, { duration: 150 });
+  };
+
   return (
     <View style={[styles.buttonWrapper, fullWidth && styles.fullWidth]}>
       {/* Shadow box */}
-      <View style={styles.shadowBox} />
+      <Animated.View style={[styles.shadowBox, shadowAnimatedStyle]} />
       
-      <TouchableOpacity
-        style={[
-          styles.button,
-          getButtonStyle(),
-          fullWidth && styles.fullWidthButton,
-          disabled && styles.disabled,
-        ]}
-        onPress={onPress}
-        disabled={disabled || loading}
-        activeOpacity={0.8}
-      >
+      <Animated.View style={buttonAnimatedStyle}>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            getButtonStyle(),
+            fullWidth && styles.fullWidthButton,
+            disabled && styles.disabled,
+          ]}
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          disabled={disabled || loading}
+          activeOpacity={1}
+        >
         {/* Border progress indicator - fills around the border */}
         {loading && (
           <View style={styles.borderProgressContainer}>
@@ -139,11 +185,12 @@ export const Button: React.FC<ButtonProps> = ({
           <ActivityIndicator color={variant === 'outline' ? Colors.primary : Colors.cardBackground} />
         ) : (
           <Text style={[styles.text, getTextStyle()]}>{title}</Text>
-        )}
-      </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
     </View>
-  );
-};
+    );
+  };
 
 const styles = StyleSheet.create({
   buttonWrapper: {

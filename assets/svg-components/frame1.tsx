@@ -1,8 +1,8 @@
 import React from "react";
 import { SvgXml } from "react-native-svg";
 
-export default function Frame1({ width, height, color }: { width?: any, height?: any, color?: string }) {
-  const xml = `<svg width="78" height="78" viewBox="0 0 78 78" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+export default function BoxSvg({ width, height, color }: { width?: any, height?: any, color?: string }) {
+  const Xml = `<svg width="78" height="78" viewBox="0 0 78 78" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <rect width="78" height="78" rx="39" fill="#F0F3F4" style="fill:#F0F3F4;fill:color(display-p3 0.9412 0.9529 0.9569);fill-opacity:1;"/>
 <rect width="78" height="78" rx="39" fill="url(#pattern0_4036_37730)" style=""/>
 <defs>
@@ -15,9 +15,8 @@ export default function Frame1({ width, height, color }: { width?: any, height?:
 `;
 
   const Svg = () => (
-    <SvgXml xml={xml} width={width} height={height} color={color} />
+    <SvgXml xml={Xml} width={width} height={height} color={color} />
   );
 
   return <Svg />;
 }
-
