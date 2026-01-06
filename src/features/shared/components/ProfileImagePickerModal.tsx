@@ -22,6 +22,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from "./Button";
 import { BorderRadius, Colors, Spacing, Typography } from "./theme";
 
@@ -51,6 +52,7 @@ export const ProfileImagePickerModal: React.FC<
 > = ({ visible, onClose, onImageSelected }) => {
   const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
 
   const requestPermission = async (source: "camera" | "library") => {
     if (Platform.OS === "web") {
@@ -113,8 +115,11 @@ export const ProfileImagePickerModal: React.FC<
       }
 
       if (!result.canceled && result.assets[0]) {
-        setSelectedImageUri(result.assets[0].uri);
+        const imageUri = result.assets[0].uri;
+        setSelectedImageUri(imageUri);
         setSelectedAvatarId(null);
+        // Auto-select the image when picked from camera/library
+        // This allows immediate save without clicking Save button in modal
       }
     } catch (error) {
       console.error("Error picking image:", error);
@@ -171,7 +176,7 @@ export const ProfileImagePickerModal: React.FC<
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.modalContainer}>
+      <View style={[styles.modalContainer, { paddingBottom: Math.max(insets.bottom, Platform.OS === "ios" ? 34 : 16) }]}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Choose photo</Text>
@@ -191,41 +196,39 @@ export const ProfileImagePickerModal: React.FC<
           showsVerticalScrollIndicator={false}
         >
           {/* Camera option */}
-          <TouchableOpacity
-            style={styles.avatarOption}
-            onPress={handleCameraPress}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.avatarCircle, styles.cameraOption]}>
-              <IconSymbol name="camera" size={32} color={Colors.textPrimary} />
+          <View style={styles.avatarOption}>
+            <View style={styles.avatarOptionWrapper}>
+              <View style={[styles.avatarShadowBox]} />
+              <TouchableOpacity
+                style={[styles.avatarCircle, styles.cameraOption]}
+                onPress={handleCameraPress}
+                activeOpacity={0.7}
+              >
+                <IconSymbol name="camera" size={32} color={Colors.textPrimary} />
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </View>
 
           {/* Avatar options */}
           {AVATAR_OPTIONS.map((avatar) => {
             const isSelected = selectedAvatarId === avatar.id.toString();
             const AvatarSource = avatar.asset;
             return (
-              <TouchableOpacity
-                key={avatar.id}
-                style={styles.avatarOption}
-                onPress={() => handleAvatarSelect(avatar.id.toString())}
-                activeOpacity={0.7}
-              >
-                <View
-                  style={[
-                    styles.avatarCircle,
-                    isSelected && styles.avatarSelected,
-                  ]}
-                >
-                  <AvatarSource />
+              <View key={avatar.id} style={styles.avatarOption}>
+                <View style={styles.avatarOptionWrapper}>
+                  <View style={styles.avatarShadowBox} />
+                  <TouchableOpacity
+                    style={[
+                      styles.avatarCircle,
+                      isSelected && styles.avatarSelected,
+                    ]}
+                    onPress={() => handleAvatarSelect(avatar.id.toString())}
+                    activeOpacity={0.7}
+                  >
+                    <AvatarSource />
+                  </TouchableOpacity>
                 </View>
-                {isSelected && (
-                  <View style={styles.selectedIndicator}>
-                    <Text style={styles.checkmark}>✓</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
+              </View>
             );
           })}
         </ScrollView>
@@ -249,7 +252,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     maxHeight: "80%",
-    paddingBottom: Platform.OS === "ios" ? 34 : 16,
   },
   header: {
     flexDirection: "row",
@@ -257,14 +259,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.inputBorder,
   },
   title: {
     ...Typography.title,
     fontSize: 18,
     color: Colors.textPrimary,
     fontWeight: "600",
+    fontFamily: 'Montserrat_600SemiBold',
   },
   closeButton: {
     width: 32,
@@ -293,6 +296,23 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     marginRight: "3.33%",
     position: "relative",
+    overflow: "visible",
+  },
+  avatarOptionWrapper: {
+    width: "100%",
+    height: "100%",
+    position: "relative",
+    overflow: "visible",
+  },
+  avatarShadowBox: {
+    position: "absolute",
+    top: 2,
+    left: 2,
+    right: -2,
+    bottom: -2,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: BorderRadius.round,
+    zIndex: 0,
   },
   avatarCircle: {
     width: "100%",
@@ -301,13 +321,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: Colors.inputBorder,
     backgroundColor: Colors.cardBackground,
     overflow: "hidden",
+    position: "relative",
+    zIndex: 1,
   },
   cameraOption: {
     backgroundColor: Colors.cardBackground,
-    borderColor: Colors.border,
+    borderColor: Colors.inputBorder,
   },
   avatarSelected: {
     borderColor: Colors.primary,
@@ -317,27 +339,9 @@ const styles = StyleSheet.create({
     width: "90%",
     height: "90%",
   },
-  selectedIndicator: {
-    position: "absolute",
-    top: 5,
-    right: 5,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.cardBackground,
-  },
-  checkmark: {
-    color: Colors.cardBackground,
-    fontSize: 14,
-    fontWeight: "700",
-  },
   footer: {
     padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopWidth: 2,
+    borderTopColor: Colors.inputBorder,
   },
 });

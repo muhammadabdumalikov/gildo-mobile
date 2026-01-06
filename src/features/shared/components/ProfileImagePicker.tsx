@@ -14,7 +14,7 @@ import { Image } from "expo-image";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ProfileImagePickerModal } from "./ProfileImagePickerModal";
-import { BorderRadius, Colors, Shadow, Spacing } from "./theme";
+import { BorderRadius, Colors, Spacing } from "./theme";
 
 interface ProfileImagePickerProps {
   imageUri?: string;
@@ -77,41 +77,62 @@ export const ProfileImagePicker: React.FC<ProfileImagePickerProps> = ({
 
   return (
     <>
-      <View style={[styles.container, { width: size, height: size }]}>
-        {displayUri ? (
-          <Image
-            source={{ uri: displayUri }}
-            style={styles.image}
-            contentFit="cover"
-          />
-        ) : avatarId ? (
-          renderAvatar()
-        ) : (
-          <View style={styles.placeholder}>
-            <IconSymbol
-              name="person.circle.fill"
-              size={size * 0.6}
-              color={Colors.textSecondary}
-            />
-          </View>
-        )}
+      <View style={[styles.containerWrapper, { width: size, height: size }]}>
+        {/* Shadow box for main profile image */}
+        <View style={[styles.shadowBox, { 
+          width: size,
+          height: size,
+          borderRadius: size / 2,
 
-        <TouchableOpacity
-          style={[
-            styles.cameraButton,
-            { width: size * 0.35, height: size * 0.35 },
-          ]}
-          onPress={handleImagePress}
-          activeOpacity={0.8}
-        >
-          <View style={styles.cameraButtonInner}>
-            <IconSymbol
-              name="camera"
-              size={size * 0.2}
-              color={Colors.cardBackground}
+        }]} />
+        
+        <View style={[styles.container, { width: size, height: size }]}>
+          {displayUri ? (
+            <Image
+              source={{ uri: displayUri }}
+              style={styles.image}
+              contentFit="cover"
             />
-          </View>
-        </TouchableOpacity>
+          ) : avatarId ? (
+            renderAvatar()
+          ) : (
+            <View style={styles.placeholder}>
+              <IconSymbol
+                name="person.circle.fill"
+                size={size * 0.6}
+                color={Colors.textSecondary}
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Camera button with shadow */}
+        <View style={[styles.cameraButtonWrapper, { 
+          bottom: 0,
+          right: 0,
+        }]}>
+          <View style={[styles.cameraButtonShadow, {
+            width: size * 0.35,
+            height: size * 0.35,
+            borderRadius: (size * 0.35) / 2,
+          }]} />
+          <TouchableOpacity
+            style={[
+              styles.cameraButton,
+              { width: size * 0.35, height: size * 0.35 },
+            ]}
+            onPress={handleImagePress}
+            activeOpacity={0.8}
+          >
+            <View style={styles.cameraButtonInner}>
+              <IconSymbol
+                name="camera"
+                size={size * 0.2}
+                color={Colors.inputBorder}
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ProfileImagePickerModal
@@ -124,10 +145,25 @@ export const ProfileImagePicker: React.FC<ProfileImagePickerProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  containerWrapper: {
     position: "relative",
     alignSelf: "center",
     marginBottom: Spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shadowBox: {
+    position: "absolute",
+    backgroundColor: Colors.inputBorder,
+    zIndex: 0,
+  },
+  container: {
+    position: "relative",
+    borderRadius: BorderRadius.round,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
+    overflow: "hidden",
+    zIndex: 1,
   },
   image: {
     width: "100%",
@@ -141,20 +177,29 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.border,
+  },
+  cameraButtonWrapper: {
+    position: "absolute",
+    zIndex: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraButtonShadow: {
+    position: "absolute",
+    top: 2,
+    left: 2,
+    backgroundColor: Colors.inputBorder,
+    zIndex: 0,
   },
   cameraButton: {
-    position: "absolute",
-    bottom: 1,
-    right: 1,
     borderRadius: BorderRadius.round,
     backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    ...Shadow.medium,
-    borderWidth: 2,
-    borderColor: Colors.cardBackground,
+    borderWidth: 1,
+    borderColor: Colors.inputBorder,
+    position: "relative",
+    zIndex: 1,
   },
   cameraButtonInner: {
     width: "100%",
@@ -168,8 +213,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.round,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.cardBackground,
     overflow: "hidden",
   },
 });

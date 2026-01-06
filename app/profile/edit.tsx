@@ -99,6 +99,7 @@ export default function EditProfileScreen() {
         title="Edit Profile" 
         scrollY={scrollY} 
         showBackButton={true}
+        showBottomBorder
       />
 
       <Animated.ScrollView

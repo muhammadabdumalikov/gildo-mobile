@@ -91,7 +91,9 @@ export const useAppStore = create<AppState>()(
       updatePreferences: async (preferences: Partial<AppPreferences>) => {
         try {
           await preferencesRepository.update(preferences);
-          set(preferences);
+          // Update store state with merged preferences
+          const currentState = get();
+          set({ ...currentState, ...preferences });
         } catch (error) {
           console.error('Error updating preferences:', error);
           throw error;
@@ -101,7 +103,20 @@ export const useAppStore = create<AppState>()(
     {
       name: 'app-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        userName: state.userName,
+        email: state.email,
+        dateOfBirth: state.dateOfBirth,
+        gender: state.gender,
+        profileImageUri: state.profileImageUri,
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
+        notificationsEnabled: state.notificationsEnabled,
+        theme: state.theme,
+      }),
     }
   )
 );
+
+// Export getState for direct access
+export const getAppStoreState = () => useAppStore.getState();
 

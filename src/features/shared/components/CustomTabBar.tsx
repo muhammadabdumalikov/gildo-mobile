@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { BorderRadius, Colors, Shadow } from './theme';
+import { BorderRadius, Colors } from './theme';
 
 type IconSymbolName = 
   | 'checkmark.circle.fill'
@@ -80,12 +80,15 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
         style={styles.tabButton}
         activeOpacity={0.7}
       >
-        <View style={[styles.tabIconContainer, isFocused && styles.tabIconContainerActive]}>
-          <IconSymbol
-            size={24}
-            name={iconName}
-            color={isFocused ? Colors.cardBackground : Colors.textSecondary}
-          />
+        <View style={styles.tabIconWrapper}>
+          {isFocused && <View style={styles.tabIconShadowBox} />}
+          <View style={[styles.tabIconContainer, isFocused && styles.tabIconContainerActive]}>
+            <IconSymbol
+              size={24}
+              name={iconName}
+              color={isFocused ? Colors.cardBackground : Colors.textSecondary}
+            />
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -93,29 +96,35 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.tabBar}>
-        {/* First half of routes */}
-        {firstHalf.map((route) => renderTabButton(route))}
+      <View style={styles.tabBarWrapper}>
+        <View style={styles.tabBarShadowBox} />
+        <View style={styles.tabBar}>
+          {/* First half of routes */}
+          {firstHalf.map((route) => renderTabButton(route))}
 
-        {/* Add Button in center */}
-        <View style={styles.centerButtonContainer}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={handleAddPress}
-            activeOpacity={0.8}
-          >
-            <View style={styles.addButtonInner}>
-              <View style={styles.addButtonGloss} />
-              <View style={styles.addButtonPlus}>
-                <View style={styles.plusLine1} />
-                <View style={styles.plusLine2} />
-              </View>
+          {/* Add Button in center */}
+          <View style={styles.centerButtonContainer}>
+            <View style={styles.addButtonWrapper}>
+              <View style={styles.addButtonShadowBox} />
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={handleAddPress}
+                activeOpacity={0.8}
+              >
+                <View style={styles.addButtonInner}>
+                  <View style={styles.addButtonGloss} />
+                  <View style={styles.addButtonPlus}>
+                    <View style={styles.plusLine1} />
+                    <View style={styles.plusLine2} />
+                  </View>
+                </View>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        </View>
+          </View>
 
-        {/* Second half of routes */}
-        {secondHalf.map((route) => renderTabButton(route))}
+          {/* Second half of routes */}
+          {secondHalf.map((route) => renderTabButton(route))}
+        </View>
       </View>
     </View>
   );
@@ -131,6 +140,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     paddingHorizontal: 8,
   },
+  tabBarWrapper: {
+    position: 'relative',
+  },
+  tabBarShadowBox: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    right: -4,
+    bottom: -4,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: BorderRadius.xl + 4,
+    zIndex: 0,
+  },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: Colors.tabBarBackground || Colors.background,
@@ -140,12 +162,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     minHeight: 70,
-    ...Shadow.medium,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
+    position: 'relative',
+    zIndex: 1,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  tabIconWrapper: {
+    position: 'relative',
+    width: 44,
+    height: 44,
+  },
+  tabIconShadowBox: {
+    position: 'absolute',
+    top: 1,
+    left: 1,
+    right: -1,
+    bottom: -1,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: BorderRadius.round + 4,
+    zIndex: 0,
   },
   tabIconContainer: {
     width: 44,
@@ -153,9 +193,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.round,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+    zIndex: 1,
   },
   tabIconContainerActive: {
     backgroundColor: Colors.primary,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
   },
   centerButtonContainer: {
     flex: 0,
@@ -163,10 +207,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginHorizontal: 12,
   },
+  addButtonWrapper: {
+    position: 'relative',
+    width: 72,
+    height: 72,
+  },
+  addButtonShadowBox: {
+    position: 'absolute',
+    top: 2,
+    left: 2,
+    right: -2,
+    bottom: -2,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: BorderRadius.round + 4,
+    zIndex: 0,
+  },
   addButton: {
     width: 72,
     height: 72,
     borderRadius: BorderRadius.round,
+    position: 'relative',
+    zIndex: 1,
   },
   addButtonInner: {
     width: '100%',
@@ -177,14 +238,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
-    ...Shadow.large,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
   },
   addButtonGloss: {
     position: 'absolute',
     top: 8,
-    left: 8,
-    right: 8,
-    height: 20,
+    left: 18,
+    right: 18,
+    height: 10,
     borderRadius: BorderRadius.round,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     opacity: 0.6,

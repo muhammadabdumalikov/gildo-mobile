@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors, Spacing, Typography, BorderRadius, Shadow } from './theme';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BorderRadius, Colors, Spacing } from './theme';
 
 interface DaySelectorProps {
   label?: string;
@@ -35,26 +35,31 @@ export const DaySelector: React.FC<DaySelectorProps> = ({
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
       <View style={styles.daysContainer}>
-        {DAYS.map((day) => (
-          <TouchableOpacity
-            key={day.value}
-            style={[
-              styles.dayButton,
-              selectedDays.includes(day.value) && styles.selectedDay,
-            ]}
-            onPress={() => toggleDay(day.value)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.dayText,
-                selectedDays.includes(day.value) && styles.selectedDayText,
-              ]}
-            >
-              {day.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {DAYS.map((day) => {
+          const isSelected = selectedDays.includes(day.value);
+          return (
+            <View key={day.value} style={styles.dayButtonWrapper}>
+              {isSelected && <View style={styles.dayButtonShadowBox} />}
+              <TouchableOpacity
+                style={[
+                  styles.dayButton,
+                  isSelected && styles.selectedDay,
+                ]}
+                onPress={() => toggleDay(day.value)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.dayText,
+                    isSelected && styles.selectedDayText,
+                  ]}
+                >
+                  {day.name}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
@@ -62,17 +67,33 @@ export const DaySelector: React.FC<DaySelectorProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
   label: {
-    ...Typography.body,
+    fontSize: 16,
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
     fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
   },
   daysContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  dayButtonWrapper: {
+    position: 'relative',
+    width: 44,
+    height: 44,
+  },
+  dayButtonShadowBox: {
+    position: 'absolute',
+    top: 1,
+    left: 1,
+    right: -1,
+    bottom: -1,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: BorderRadius.round + 2,
+    zIndex: 0,
   },
   dayButton: {
     width: 44,
@@ -81,15 +102,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.cardBackground,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
+    position: 'relative',
+    zIndex: 1,
   },
   selectedDay: {
     backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    borderColor: Colors.inputBorder,
   },
   dayText: {
-    ...Typography.body,
+    fontSize: 15,
+    fontFamily: 'Montserrat_600SemiBold',
     color: Colors.textSecondary,
     fontWeight: '600',
   },

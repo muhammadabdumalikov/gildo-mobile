@@ -22,6 +22,7 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 20,
     fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
     color: Colors.textPrimary,
   },
 });

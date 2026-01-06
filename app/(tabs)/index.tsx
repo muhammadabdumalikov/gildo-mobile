@@ -11,6 +11,7 @@ import {
 import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface MedicationByTime {
   [time: string]: Array<{
@@ -22,6 +23,7 @@ interface MedicationByTime {
 export default function HomeScreen() {
   const { userName, profileImageUri } = useAppStore();
   const { medications, loadMedications, isLoading } = useMedicationStore();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadMedications();
@@ -76,7 +78,10 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: Spacing.lg + insets.top },
+        ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
@@ -130,12 +135,17 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.subheader,
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
     textAlign: 'center',
   },
   emptySubtitle: {
     ...Typography.body,
+    fontSize: 14,
+    fontFamily: 'Montserrat_400Regular',
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,

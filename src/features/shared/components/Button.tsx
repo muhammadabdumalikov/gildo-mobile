@@ -12,7 +12,7 @@ import { Colors, Spacing, Typography } from './theme';
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'destructive';
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
@@ -47,6 +47,8 @@ export const Button: React.FC<ButtonProps> = ({
         return styles.secondaryButton;
       case 'outline':
         return styles.outlineButton;
+      case 'destructive':
+        return styles.destructiveButton;
       default:
         return styles.primaryButton;
     }
@@ -56,6 +58,8 @@ export const Button: React.FC<ButtonProps> = ({
     switch (variant) {
       case 'outline':
         return styles.outlineText;
+      case 'destructive':
+        return styles.destructiveText;
       default:
         return styles.buttonText;
     }
@@ -174,15 +178,35 @@ export const Button: React.FC<ButtonProps> = ({
         {/* Border progress indicator - fills around the border */}
         {loading && (
           <View style={styles.borderProgressContainer}>
-            <Animated.View style={[styles.borderProgressTop, topProgressStyle]} />
-            <Animated.View style={[styles.borderProgressRight, rightProgressStyle]} />
-            <Animated.View style={[styles.borderProgressBottom, bottomProgressStyle]} />
-            <Animated.View style={[styles.borderProgressLeft, leftProgressStyle]} />
+            <Animated.View style={[
+              styles.borderProgressTop, 
+              topProgressStyle,
+              { backgroundColor: variant === 'destructive' ? Colors.pillRed : Colors.primary }
+            ]} />
+            <Animated.View style={[
+              styles.borderProgressRight, 
+              rightProgressStyle,
+              { backgroundColor: variant === 'destructive' ? Colors.pillRed : Colors.primary }
+            ]} />
+            <Animated.View style={[
+              styles.borderProgressBottom, 
+              bottomProgressStyle,
+              { backgroundColor: variant === 'destructive' ? Colors.pillRed : Colors.primary }
+            ]} />
+            <Animated.View style={[
+              styles.borderProgressLeft, 
+              leftProgressStyle,
+              { backgroundColor: variant === 'destructive' ? Colors.pillRed : Colors.primary }
+            ]} />
           </View>
         )}
         
         {loading ? (
-          <ActivityIndicator color={variant === 'outline' ? Colors.primary : Colors.cardBackground} />
+          <ActivityIndicator color={
+            variant === 'outline' ? Colors.primary : 
+            variant === 'destructive' ? Colors.cardBackground :
+            Colors.cardBackground
+          } />
         ) : (
           <Text style={[styles.text, getTextStyle()]}>{title}</Text>
           )}
@@ -230,6 +254,9 @@ const styles = StyleSheet.create({
   outlineButton: {
     backgroundColor: 'transparent',
   },
+  destructiveButton: {
+    backgroundColor: Colors.pillRed,
+  },
   fullWidth: {
     width: '100%',
   },
@@ -251,6 +278,9 @@ const styles = StyleSheet.create({
   outlineText: {
     color: Colors.primary,
   },
+  destructiveText: {
+    color: Colors.cardBackground,
+  },
   borderProgressContainer: {
     position: 'absolute',
     top: -2,
@@ -265,7 +295,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     height: 2,
-    backgroundColor: Colors.primary,
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
   },
@@ -274,7 +303,6 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     width: 2,
-    backgroundColor: Colors.primary,
     borderTopRightRadius: 5,
     borderBottomRightRadius: 5,
   },
@@ -283,7 +311,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     height: 2,
-    backgroundColor: Colors.primary,
     borderBottomRightRadius: 5,
     borderBottomLeftRadius: 5,
   },
@@ -292,7 +319,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: 2,
-    backgroundColor: Colors.primary,
     borderBottomLeftRadius: 5,
     borderTopLeftRadius: 5,
   },

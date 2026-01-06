@@ -7,19 +7,31 @@ import {
     Spacing,
     Typography,
 } from '@/src/features/shared/components';
-import { router } from 'expo-router';
-import React from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
     useAnimatedScrollHandler,
     useSharedValue,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
-  const { userName, profileImageUri } = useAppStore();
+  // Explicitly subscribe to store values to ensure re-renders
+  const userName = useAppStore((state) => state.userName);
+  const profileImageUri = useAppStore((state) => state.profileImageUri);
   const scrollY = useSharedValue(0);
+  const insets = useSafeAreaInsets();
 
   const displayName = userName || 'there';
+
+  // Refresh profile data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // This will trigger a re-render when the screen comes into focus
+      // Zustand will automatically pick up any state changes
+    }, [profileImageUri, userName])
+  );
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -68,12 +80,12 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <AnimatedHeader title="Profile Settings" scrollY={scrollY} />
+      <AnimatedHeader title="Profile Settings" scrollY={scrollY} showBottomBorder blurHeader={true} />
       <Animated.ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: 120 + 10 }, // Account for header max height + safe area
+          { paddingTop: 120 + insets.top }, // Account for header max height + safe area
         ]}
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
@@ -83,18 +95,21 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Profile</Text>
           
-          <View style={styles.profileContainer}>
-            <ProfileImage
-              imageUri={profileImageUri}
-              userName={userName}
-              size={64}
-            />
-            
-            <View style={styles.profileTextContainer}>
-              <Text style={styles.profileName}>Hello, {displayName}</Text>
-              <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7}>
-                <Text style={styles.editProfileLink}>Edit Profile</Text>
-              </TouchableOpacity>
+          <View style={styles.profileContainerWrapper}>
+            <View style={styles.profileShadowBox} />
+            <View style={styles.profileContainer}>
+              <ProfileImage
+                imageUri={profileImageUri}
+                userName={userName}
+                size={64}
+              />
+              
+              <View style={styles.profileTextContainer}>
+                <Text style={styles.profileName}>Hello, {displayName}</Text>
+                <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7}>
+                  <Text style={styles.editProfileLink}>Edit Profile</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -179,7 +194,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.lg,
-    paddingTop: 120, // Account for header max height
   },
   section: {
     marginBottom: Spacing.xl,
@@ -190,11 +204,32 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
     fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  profileContainerWrapper: {
+    position: 'relative',
+    marginBottom: Spacing.md,
+  },
+  profileShadowBox: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    right: -4,
+    bottom: -4,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: 5,
+    zIndex: 0,
   },
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    backgroundColor: Colors.cardBackground,
+    borderRadius: 5,
+    padding: Spacing.lg,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
+    position: 'relative',
+    zIndex: 1,
   },
   profileTextContainer: {
     marginLeft: Spacing.md,
@@ -204,13 +239,16 @@ const styles = StyleSheet.create({
   profileName: {
     ...Typography.subheader,
     fontSize: 22,
+    fontWeight: '700',
+    fontFamily: 'Montserrat_700Bold',
     color: Colors.textPrimary,
     marginBottom: 4,
   },
   editProfileLink: {
-    ...Typography.body,
-    color: Colors.pillBlue,
     fontSize: 14,
+    fontFamily: 'Montserrat_600SemiBold',
+    fontWeight: '600',
+    color: Colors.pillBlue,
   },
   bottomPadding: {
     height: 100,

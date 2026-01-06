@@ -270,7 +270,7 @@ export default function MedicationFormScreen() {
             <Button
               title="Delete Medication"
               onPress={handleDelete}
-              variant="outline"
+              variant="destructive"
               disabled={loading}
               fullWidth
             />

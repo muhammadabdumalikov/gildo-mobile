@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Colors, Spacing, Typography, BorderRadius } from './theme';
+import React from 'react';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Colors, Spacing } from './theme';
 
 interface TimePickerProps {
   label?: string;
@@ -45,14 +45,18 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <TouchableOpacity
-        style={styles.input}
-        onPress={() => setShow(true)}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.valueText}>{value}</Text>
-        <Text style={styles.icon}>🕐</Text>
-      </TouchableOpacity>
+      <View style={styles.inputWrapper}>
+        {/* Shadow effect */}
+        <View style={styles.shadowBox} />
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setShow(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.valueText}>{value}</Text>
+          <Text style={styles.icon}>🕐</Text>
+        </TouchableOpacity>
+      </View>
 
       {show && (
         <DateTimePicker
@@ -69,27 +73,48 @@ export const TimePicker: React.FC<TimePickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
+    width: '100%',
   },
   label: {
-    ...Typography.body,
+    fontSize: 16,
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
     fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  inputWrapper: {
+    position: 'relative',
+    width: '100%',
+  },
+  shadowBox: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    right: -4,
+    bottom: -4,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: 5,
+    zIndex: 0,
   },
   input: {
     backgroundColor: Colors.cardBackground,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: 50,
+    position: 'relative',
+    zIndex: 1,
   },
   valueText: {
-    ...Typography.body,
-    color: Colors.textPrimary,
+    fontSize: 15,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: Colors.inputBorder,
     fontWeight: '600',
   },
   icon: {
