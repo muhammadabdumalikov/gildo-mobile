@@ -1,21 +1,30 @@
 import { useWishlistStore } from '@/src/core/store';
 import {
+  AnimatedHeader,
   Colors,
   Spacing,
   WishlistCard,
 } from '@/src/features/shared/components';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function WishlistsListScreen() {
   const { wishlistItems, loadWishlistItems, isLoading } = useWishlistStore();
   const insets = useSafeAreaInsets();
+  const scrollY = useSharedValue(0);
 
   useEffect(() => {
     loadWishlistItems();
   }, []);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   // Sort wishlist items: unredeemed first, then redeemed
   const sortedWishlistItems = useMemo(() => {
@@ -51,13 +60,22 @@ export default function WishlistsListScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <AnimatedHeader
+        title="Wishlists"
+        scrollY={scrollY}
+        showBackButton
+        showBottomBorder
+        blurHeader={true}
+      />
+      <Animated.ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: Spacing.lg + insets.top },
+          { paddingTop: 120 + insets.top },
         ]}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
         }
@@ -80,7 +98,7 @@ export default function WishlistsListScreen() {
 
         {/* Bottom padding for tab bar */}
         <View style={styles.bottomPadding} />
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

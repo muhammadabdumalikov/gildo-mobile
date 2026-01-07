@@ -1,21 +1,30 @@
 import { useTaskStore } from '@/src/core/store';
 import {
+  AnimatedHeader,
   Colors,
   Spacing,
   TaskCard,
 } from '@/src/features/shared/components';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TasksListScreen() {
   const { tasks, loadTasks, toggleTaskComplete, toggleTaskIncomplete, isLoading } = useTaskStore();
   const insets = useSafeAreaInsets();
+  const scrollY = useSharedValue(0);
 
   useEffect(() => {
     loadTasks();
   }, []);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   // Get all tasks, sorted: incomplete first (by due date), then completed (by completion date)
   const sortedTasks = useMemo(() => {
@@ -57,13 +66,22 @@ export default function TasksListScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <AnimatedHeader
+        title="Tasks"
+        scrollY={scrollY}
+        showBackButton
+        showBottomBorder
+        blurHeader={true}
+      />
+      <Animated.ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: Spacing.lg + insets.top },
+          { paddingTop: 120 + insets.top },
         ]}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
         }
@@ -88,7 +106,7 @@ export default function TasksListScreen() {
 
         {/* Bottom padding for tab bar */}
         <View style={styles.bottomPadding} />
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

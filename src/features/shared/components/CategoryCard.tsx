@@ -31,8 +31,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
         disabled={!onPress}
       >
         {/* Decorative background pattern */}
-        <View style={[styles.decorativeCircle, { backgroundColor: iconColor, opacity: 0.05 }]} />
-        <View style={[styles.decorativeCircleSmall, { backgroundColor: iconColor, opacity: 0.08 }]} />
+        <View style={[styles.decorativeCircle, { backgroundColor: iconColor, opacity: 0.06 }]} />
         
         <View style={styles.cardContent}>
           <View style={[styles.iconContainer, { backgroundColor: iconColor }]}>
@@ -47,7 +46,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
           </View>
 
           <View style={styles.content}>
-            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.title} numberOfLines={1}>{title}</Text>
             <View style={styles.countRow}>
               <View style={[styles.countBadge, { backgroundColor: iconColor }]}>
                 <Text style={styles.countNumber}>{count}</Text>
@@ -73,7 +72,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
 const styles = StyleSheet.create({
   cardWrapper: {
     position: 'relative',
-    marginBottom: Spacing.lg,
+    flex: 1,
   },
   shadowBox: {
     position: 'absolute',
@@ -86,6 +85,7 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   card: {
+    flex: 1,
     backgroundColor: Colors.cardBackground,
     borderRadius: 5,
     padding: Spacing.lg,
@@ -93,24 +93,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.inputBorder,
     position: 'relative',
     zIndex: 1,
-    minHeight: 130,
     overflow: 'hidden',
   },
   decorativeCircle: {
     position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    top: -60,
-    right: -60,
-  },
-  decorativeCircleSmall: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    bottom: -20,
-    left: -20,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    top: -50,
+    right: -50,
   },
   cardContent: {
     flex: 1,
@@ -118,9 +109,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: BorderRadius.md,
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.lg,
@@ -147,7 +138,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Montserrat_700Bold',
     color: Colors.textPrimary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   countRow: {
     flexDirection: 'row',
@@ -158,13 +149,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: BorderRadius.sm,
     marginRight: Spacing.xs,
-    minWidth: 32,
+    minWidth: 36,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: Colors.inputBorder,
   },
   countNumber: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     fontFamily: 'Montserrat_700Bold',
     color: Colors.cardBackground,

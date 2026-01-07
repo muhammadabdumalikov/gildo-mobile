@@ -1,15 +1,16 @@
 import { useMedicationStore } from '@/src/core/store';
 import { MedicationSchedule, MedicationWithSchedules } from '@/src/core/types';
 import {
+  AnimatedHeader,
   Colors,
-  HeaderCard,
   PillCard,
   Spacing,
   TimeSlot,
 } from '@/src/features/shared/components';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface MedicationByTime {
@@ -22,10 +23,17 @@ interface MedicationByTime {
 export default function PillsListScreen() {
   const { medications, loadMedications, isLoading } = useMedicationStore();
   const insets = useSafeAreaInsets();
+  const scrollY = useSharedValue(0);
 
   useEffect(() => {
     loadMedications();
   }, []);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   // Group medications by time
   const medicationsByTime = useMemo(() => {
@@ -77,13 +85,22 @@ export default function PillsListScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <AnimatedHeader
+        title="Pills"
+        scrollY={scrollY}
+        showBackButton
+        showBottomBorder
+        blurHeader={true}
+      />
+      <Animated.ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: Spacing.lg + insets.top },
+          { paddingTop: 120 + insets.top },
         ]}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
         }
@@ -112,7 +129,7 @@ export default function PillsListScreen() {
 
         {/* Bottom padding for tab bar */}
         <View style={styles.bottomPadding} />
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

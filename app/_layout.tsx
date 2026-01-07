@@ -66,10 +66,7 @@ export default function RootLayout() {
       <NotificationHandler />
       <Stack
         screenOptions={{
-          headerStyle: {
-            backgroundColor: Colors.background,
-          },
-          headerTintColor: Colors.textPrimary,
+          headerShown: false,
           contentStyle: {
             backgroundColor: Colors.background,
           },
@@ -103,28 +100,28 @@ export default function RootLayout() {
         <Stack.Screen 
           name="profile/edit" 
           options={{ 
-            title: 'Edit Profile',
+            headerShown: false,
             presentation: 'card',
           }} 
         />
         <Stack.Screen 
           name="pills/index" 
           options={{ 
-            title: 'Pills',
+            headerShown: false,
             presentation: 'card',
           }} 
         />
         <Stack.Screen 
           name="tasks/index" 
           options={{ 
-            title: 'Tasks',
+            headerShown: false,
             presentation: 'card',
           }} 
         />
         <Stack.Screen 
           name="wishlists/index" 
           options={{ 
-            title: 'Wishlists',
+            headerShown: false,
             presentation: 'card',
           }} 
         />

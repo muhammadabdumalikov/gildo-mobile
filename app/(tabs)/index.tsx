@@ -6,18 +6,19 @@ import {
   Spacing,
 } from '@/src/features/shared/components';
 import { router } from 'expo-router';
-import React, { useEffect, useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 export default function HomeScreen() {
   const { userName, profileImageUri } = useAppStore();
-  const { medications, loadMedications, isLoading: isLoadingMedications } = useMedicationStore();
-  const { tasks, loadTasks, isLoading: isLoadingTasks } = useTaskStore();
-  const { wishlistItems, loadWishlistItems, isLoading: isLoadingWishlist } = useWishlistStore();
+  const { medications, loadMedications } = useMedicationStore();
+  const { tasks, loadTasks } = useTaskStore();
+  const { wishlistItems, loadWishlistItems } = useWishlistStore();
   const { balance: coinBalance, loadCoins } = useCoinsStore();
   const insets = useSafeAreaInsets();
+  const [selectedDate, setSelectedDate] = useState(new Date().getDate());
 
   useEffect(() => {
     loadMedications();
@@ -25,6 +26,24 @@ export default function HomeScreen() {
     loadWishlistItems();
     loadCoins();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Generate week dates
+  const weekDates = useMemo(() => {
+    const today = new Date();
+    const dates = [];
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    for (let i = -3; i <= 3; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push({
+        dayName: dayNames[date.getDay()],
+        date: date.getDate(),
+        isToday: i === 0,
+      });
+    }
+    return dates;
   }, []);
 
   // Count total medications
@@ -37,15 +56,6 @@ export default function HomeScreen() {
     return tasks.length;
   }, [tasks]);
 
-  // Count total wishlist items
-  const wishlistCount = useMemo(() => {
-    return wishlistItems.length;
-  }, [wishlistItems]);
-
-  const handleRefresh = async () => {
-    await Promise.all([loadMedications(), loadTasks(), loadWishlistItems(), loadCoins()]);
-  };
-
   const handlePillsPress = () => {
     router.push('/pills');
   };
@@ -54,63 +64,74 @@ export default function HomeScreen() {
     router.push('/tasks');
   };
 
-  const handleWishlistsPress = () => {
-    router.push('/wishlists');
-  };
-
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: Spacing.lg + insets.top },
-        ]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoadingMedications || isLoadingTasks || isLoadingWishlist}
-            onRefresh={handleRefresh}
-          />
-        }
-      >
+      <View style={[styles.content, { paddingTop: Spacing.lg + insets.top }]}>
         <HeaderCard 
           userName={userName} 
           profileImageUri={profileImageUri} 
           coinBalance={coinBalance}
         />
 
-        {/* Category Cards */}
-        <View style={styles.categoriesSection}>
-          <CategoryCard
-            title="Pills"
-            count={medicationsCount}
-            iconName="pills"
-            iconLibrary="FontAwesome6"
-            iconColor={Colors.pillBlue}
-            onPress={handlePillsPress}
-          />
-          <CategoryCard
-            title="Tasks"
-            count={tasksCount}
-            iconName="list-check"
-            iconLibrary="FontAwesome6"
-            iconColor={Colors.pillGreen}
-            onPress={handleTasksPress}
-          />
-          <CategoryCard
-            title="Wishlists"
-            count={wishlistCount}
-            iconName="gift"
-            iconLibrary="FontAwesome6"
-            iconColor={Colors.pillPurple}
-            onPress={handleWishlistsPress}
-          />
-        </View>
+        {/* Week Calendar */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.weekCalendar}
+          contentContainerStyle={styles.weekCalendarContent}
+        >
+          {weekDates.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.dateItem,
+                item.isToday && styles.dateItemToday,
+                selectedDate === item.date && styles.dateItemSelected,
+              ]}
+              onPress={() => setSelectedDate(item.date)}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.dayName,
+                (item.isToday || selectedDate === item.date) && styles.dayNameActive
+              ]}>
+                {item.dayName}
+              </Text>
+              <Text style={[
+                styles.dateNumber,
+                (item.isToday || selectedDate === item.date) && styles.dateNumberActive
+              ]}>
+                {item.date}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-        {/* Bottom padding for tab bar */}
-        <View style={styles.bottomPadding} />
-      </ScrollView>
+        {/* Cards List - 1 per row */}
+        <View style={styles.cardsContainer}>
+          <View style={styles.cardItem}>
+            <CategoryCard
+              title="Pills"
+              count={medicationsCount}
+              iconName="pills"
+              iconLibrary="FontAwesome6"
+              iconColor={Colors.pillBlue}
+              onPress={handlePillsPress}
+            />
+          </View>
+
+          <View style={styles.cardItem}>
+            <CategoryCard
+              title="Tasks"
+              count={tasksCount}
+              iconName="list-check"
+              iconLibrary="FontAwesome6"
+              iconColor={Colors.pillGreen}
+              onPress={handleTasksPress}
+            />
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
@@ -119,18 +140,61 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+    paddingBottom: 100,
   },
-  scrollView: {
-    flex: 1,
+  content: {
+    paddingHorizontal: Spacing.lg,
   },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: 120, // Extra space for custom tab bar
+  weekCalendar: {
+    marginHorizontal: -Spacing.lg,
   },
-  bottomPadding: {
-    height: 20,
+  weekCalendarContent: {
+    height: 70,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+    alignItems: 'center',
   },
-  categoriesSection: {
-    marginTop: Spacing.md,
+  dateItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 60,
+    height: 70,
+    borderRadius: 15,
+    backgroundColor: Colors.cardBackground,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
+  },
+  dateItemToday: {
+    backgroundColor: Colors.primary,
+  },
+  dateItemSelected: {
+    backgroundColor: Colors.primary,
+  },
+  dayName: {
+    fontSize: 13,
+    fontFamily: 'Montserrat_500Medium',
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  dayNameActive: {
+    color: Colors.cardBackground,
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  dateNumber: {
+    fontSize: 20,
+    fontWeight: '700',
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.textPrimary,
+  },
+  dateNumberActive: {
+    color: Colors.cardBackground,
+  },
+  cardsContainer: {
+    marginTop: Spacing.xl,
+  },
+  cardItem: {
+    height: 140,
+    marginBottom: Spacing.md,
   },
 });
