@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: BorderRadius.sm,
     borderWidth: 2,
-    borderColor: Colors.inputBorder,
+    borderColor: Colors.cardBackground,
     marginTop: Spacing.sm,
   },
   comingSoonText: {

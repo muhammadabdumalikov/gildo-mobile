@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { Colors, Spacing, Typography } from './theme';
 
@@ -6,6 +6,7 @@ interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
   required?: boolean;
+  rightIcon?: ReactNode;
 }
 
 export const Input: React.FC<InputProps> = ({ 
@@ -15,6 +16,7 @@ export const Input: React.FC<InputProps> = ({
   required,
   onFocus,
   onBlur,
+  rightIcon,
   ...props 
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -43,18 +45,26 @@ export const Input: React.FC<InputProps> = ({
           styles.shadowBox,
           error && styles.shadowBoxError,
         ]} />
-        <TextInput
-          style={[
-            styles.input,
-            isFocused && styles.inputFocused,
-            error && styles.inputError,
-            style,
-          ]}
-          placeholderTextColor="rgba(102, 102, 102, 0.8)" // font-color-sub with 0.8 opacity
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          {...props}
-        />
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[
+              styles.input,
+              isFocused && styles.inputFocused,
+              error && styles.inputError,
+              rightIcon && styles.inputWithIcon,
+              style,
+            ]}
+            placeholderTextColor="rgba(102, 102, 102, 0.8)" // font-color-sub with 0.8 opacity
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            {...props}
+          />
+          {rightIcon && (
+            <View style={styles.rightIconContainer}>
+              {rightIcon}
+            </View>
+          )}
+        </View>
       </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
@@ -78,6 +88,11 @@ const styles = StyleSheet.create({
   inputWrapper: {
     position: 'relative',
     width: '100%',
+  },
+  inputContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   shadowBox: {
     position: 'absolute',
@@ -104,6 +119,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_600SemiBold',
     position: 'relative',
     zIndex: 1,
+  },
+  inputWithIcon: {
+    paddingRight: 40,
+  },
+  rightIconContainer: {
+    position: 'absolute',
+    right: 12,
+    zIndex: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   inputFocused: {
     borderColor: Colors.primary, // input-focus

@@ -74,6 +74,9 @@ export interface Task {
   coinReward: number;
   isCompleted: boolean;
   dueDate?: number;
+  assigner?: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface UserCoins {

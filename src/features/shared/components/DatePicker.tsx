@@ -222,14 +222,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   
-  // Parse current value or use default (18 years ago)
+  // Parse current value or use default (today)
   const getInitialDate = () => {
     if (value) {
       return parseISO(value);
     }
-    const defaultDate = new Date();
-    defaultDate.setFullYear(defaultDate.getFullYear() - 18);
-    return defaultDate;
+    return new Date();
   };
 
   const initialDate = getInitialDate();

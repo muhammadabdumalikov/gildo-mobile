@@ -1,7 +1,8 @@
 import { Task } from '@/src/core/types';
 import { generateId } from '@/src/core/utils/generateId';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface TaskState {
   tasks: Task[];
@@ -10,6 +11,7 @@ interface TaskState {
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   toggleTaskComplete: (id: string) => Promise<void>;
+  toggleTaskIncomplete: (id: string) => Promise<void>;
   getTaskById: (id: string) => Task | undefined;
   isLoading: boolean;
 }
@@ -69,18 +71,28 @@ export const useTaskStore = create<TaskState>()(
         set((state) => ({
           tasks: state.tasks.map((task) =>
             task.id === id
-              ? { ...task, isCompleted: !task.isCompleted, updatedAt: Date.now() }
+              ? { ...task, isCompleted: true, updatedAt: Date.now() }
               : task
           ),
         }));
       },
 
+      toggleTaskIncomplete: async (id) => {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id
+              ? { ...task, isCompleted: false, updatedAt: Date.now() }
+              : task
+          ),
+        }));
+      },
       getTaskById: (id) => {
         return get().tasks.find((task) => task.id === id);
       },
     }),
     {
       name: 'task-storage',
+      storage: createJSONStorage(() => AsyncStorage),
     }
   )
 );

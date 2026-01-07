@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -7,6 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { CubeSpinner } from './CubeSpinner';
 import { Colors, Spacing, Typography } from './theme';
 
 interface ButtonProps {
@@ -202,14 +203,17 @@ export const Button: React.FC<ButtonProps> = ({
         )}
         
         {loading ? (
-          <ActivityIndicator color={
-            variant === 'outline' ? Colors.primary : 
-            variant === 'destructive' ? Colors.cardBackground :
-            Colors.cardBackground
-          } />
+          <CubeSpinner 
+            size={32} 
+            color={
+              variant === 'outline' ? Colors.primary : 
+              variant === 'destructive' ? Colors.cardBackground :
+              Colors.cardBackground
+            } 
+          />
         ) : (
           <Text style={[styles.text, getTextStyle()]}>{title}</Text>
-          )}
+        )}
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -232,7 +236,7 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   button: {
-    paddingVertical: 12,
+    paddingVertical: 4,
     paddingHorizontal: Spacing.xl,
     borderRadius: 5,
     alignItems: 'center',

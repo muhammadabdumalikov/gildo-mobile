@@ -1,3 +1,4 @@
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useTaskStore } from '@/src/core/store';
 import {
   AnimatedHeader,
@@ -6,6 +7,7 @@ import {
   createAlertHelpers,
   DatePicker,
   Input,
+  Picker,
   Spacing,
   useAlertModal
 } from '@/src/features/shared/components';
@@ -43,7 +45,17 @@ export default function TaskFormScreen() {
   const [description, setDescription] = useState('');
   const [coinReward, setCoinReward] = useState('10');
   const [dueDate, setDueDate] = useState<string | undefined>(undefined);
+  const [assigner, setAssigner] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Assigner options
+  const assignerOptions = [
+    { label: 'Myself', value: 'myself' },
+    { label: 'Family Member', value: 'family' },
+    { label: 'Friend', value: 'friend' },
+    { label: 'Colleague', value: 'colleague' },
+    { label: 'Other', value: 'other' },
+  ];
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -64,6 +76,9 @@ export default function TaskFormScreen() {
           // Set to start of day to avoid timezone issues
           date.setHours(0, 0, 0, 0);
           setDueDate(date.toISOString());
+        }
+        if (task.assigner) {
+          setAssigner(task.assigner);
         }
       } else {
         alert.error('Task Not Found', 'The task you are trying to edit does not exist.', () => router.back());
@@ -88,6 +103,7 @@ export default function TaskFormScreen() {
           description: description.trim(),
           coinReward: coinRewardNum,
           dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
+          assigner: assigner || undefined,
         });
 
         alert.success('Task Created', 'Your task has been created successfully!', () => router.back());
@@ -97,6 +113,7 @@ export default function TaskFormScreen() {
           description: description.trim(),
           coinReward: coinRewardNum,
           dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
+          assigner: assigner || undefined,
         });
 
         alert.success('Task Updated', 'Your task has been updated successfully!', () => router.back());
@@ -170,6 +187,14 @@ export default function TaskFormScreen() {
               value={coinReward}
               onChangeText={setCoinReward}
               keyboardType="number-pad"
+              rightIcon={
+                <IconSymbol
+                  name="coins"
+                  library="FontAwesome6"
+                  size={18}
+                  color={Colors.inputBorder}
+                />
+              }
             />
           </View>
           <View style={styles.halfWidth}>
@@ -181,6 +206,14 @@ export default function TaskFormScreen() {
             />
           </View>
         </View>
+
+        <Picker
+          label="Assigner (Optional)"
+          value={assigner}
+          options={assignerOptions}
+          onValueChange={setAssigner}
+          placeholder="Select assigner"
+        />
 
         <View style={styles.buttonContainer}>
           <Button

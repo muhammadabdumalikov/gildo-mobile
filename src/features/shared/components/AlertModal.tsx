@@ -75,17 +75,15 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   const handleConfirm = () => {
     if (onConfirm) {
       onConfirm();
-    } else {
-      onClose();
     }
+    onClose();
   };
 
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
-    } else {
-      onClose();
     }
+    onClose();
   };
 
   return (
@@ -131,11 +129,11 @@ export const AlertModal: React.FC<AlertModalProps> = ({
               {showCancel && (
                 <View style={styles.cancelButtonWrapper}>
                   <TouchableOpacity
-                    style={[styles.cancelButton, { borderColor: config.borderColor }]}
+                    style={styles.cancelButton}
                     onPress={handleCancel}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.cancelButtonText, { color: config.borderColor }]}>
+                    <Text style={styles.cancelButtonText}>
                       {cancelText}
                     </Text>
                   </TouchableOpacity>
@@ -251,6 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
+    borderColor: Colors.textSecondary,
     minHeight: 44,
   },
   cancelButtonText: {
@@ -258,6 +257,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Montserrat_600SemiBold',
     fontWeight: '600',
+    color: Colors.textSecondary,
   },
   confirmButtonWrapper: {
     flex: 1,

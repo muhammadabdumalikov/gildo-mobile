@@ -1,10 +1,11 @@
-import { useAppStore, useMedicationStore } from '@/src/core/store';
+import { useAppStore, useMedicationStore, useTaskStore } from '@/src/core/store';
 import { MedicationSchedule, MedicationWithSchedules } from '@/src/core/types';
 import {
   Colors,
   HeaderCard,
   PillCard,
   Spacing,
+  TaskCard,
   TimeSlot,
   Typography,
 } from '@/src/features/shared/components';
@@ -14,19 +15,21 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface MedicationByTime {
-  [time: string]: Array<{
+  [time: string]: {
     medication: MedicationWithSchedules;
     schedule: MedicationSchedule;
-  }>;
+  }[];
 }
 
 export default function HomeScreen() {
   const { userName, profileImageUri } = useAppStore();
-  const { medications, loadMedications, isLoading } = useMedicationStore();
+  const { medications, loadMedications, isLoading: isLoadingMedications } = useMedicationStore();
+  const { tasks, loadTasks, toggleTaskComplete, toggleTaskIncomplete, isLoading: isLoadingTasks } = useTaskStore();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadMedications();
+    loadTasks();
   }, []);
 
   // Group medications by time
@@ -56,13 +59,33 @@ export default function HomeScreen() {
     return sortedGrouped;
   }, [medications]);
 
+  // Get all tasks, sorted: incomplete first (by due date), then completed (by completion date)
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort((a, b) => {
+      const dateA = a.dueDate || a.createdAt;
+      const dateB = b.dueDate || b.createdAt;
+      return dateA - dateB;
+    });
+  }, [tasks]);
 
   const handleMedicationPress = (medicationId: string) => {
     router.push(`/medication/${medicationId}`);
   };
 
+  const handleTaskPress = (taskId: string) => {
+    router.push(`/task/${taskId}`);
+  };
+
+  const handleTaskMarkComplete = async (taskId: string) => {
+    await toggleTaskComplete(taskId);
+  };
+
+  const handleTaskMarkIncomplete = async (taskId: string) => {
+    await toggleTaskIncomplete(taskId);
+  };
+
   const handleRefresh = async () => {
-    await loadMedications();
+    await Promise.all([loadMedications(), loadTasks()]);
   };
 
   const renderEmptyState = () => (
@@ -72,6 +95,10 @@ export default function HomeScreen() {
         Tap the + button below to add your first medication reminder
       </Text>
     </View>
+  );
+
+  const renderSectionTitle = (title: string) => (
+    <Text style={styles.sectionTitle}>{title}</Text>
   );
 
   return (
@@ -84,27 +111,50 @@ export default function HomeScreen() {
         ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isLoadingMedications || isLoadingTasks}
+            onRefresh={handleRefresh}
+          />
         }
       >
         <HeaderCard userName={userName} profileImageUri={profileImageUri} />
 
+        {/* Tasks Section */}
+        {sortedTasks.length > 0 && (
+          <View style={styles.tasksSection}>
+            {renderSectionTitle("Today's Tasks")}
+            {sortedTasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onPress={() => handleTaskPress(task.id)}
+                onMarkComplete={() => handleTaskMarkComplete(task.id)}
+                onMarkIncomplete={() => handleTaskMarkIncomplete(task.id)}
+              />
+            ))}
+          </View>
+        )}
+
+        {/* Medications Section */}
         {Object.keys(medicationsByTime).length === 0 ? (
           renderEmptyState()
         ) : (
-          Object.entries(medicationsByTime).map(([time, items]) => (
-            <View key={time}>
-              <TimeSlot time={time} />
-              {items.map(({ medication, schedule }) => (
-                <PillCard
-                  key={`${medication.id}-${schedule.id}`}
-                  medication={medication}
-                  scheduleTime={schedule.time}
-                  onPress={() => handleMedicationPress(medication.id)}
-              />
-              ))}
-            </View>
-          ))
+          <View style={styles.medicationsSection}>
+            {renderSectionTitle('Medications')}
+            {Object.entries(medicationsByTime).map(([time, items]) => (
+              <View key={time}>
+                <TimeSlot time={time} />
+                {items.map(({ medication, schedule }) => (
+                  <PillCard
+                    key={`${medication.id}-${schedule.id}`}
+                    medication={medication}
+                    scheduleTime={schedule.time}
+                    onPress={() => handleMedicationPress(medication.id)}
+                  />
+                ))}
+              </View>
+            ))}
+          </View>
         )}
 
         {/* Bottom padding for tab bar */}
@@ -152,5 +202,20 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 20,
+  },
+  sectionTitle: {
+    ...Typography.subheader,
+    fontSize: 20,
+    fontWeight: '700',
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  tasksSection: {
+    marginBottom: Spacing.xl,
+  },
+  medicationsSection: {
+    marginTop: Spacing.md,
   },
 });
