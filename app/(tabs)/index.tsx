@@ -15,10 +15,17 @@ export default function HomeScreen() {
   const { userName, profileImageUri } = useAppStore();
   const { medications, loadMedications } = useMedicationStore();
   const { tasks, loadTasks } = useTaskStore();
-  const { wishlistItems, loadWishlistItems } = useWishlistStore();
+  const { loadWishlistItems } = useWishlistStore();
   const { balance: coinBalance, loadCoins } = useCoinsStore();
   const insets = useSafeAreaInsets();
-  const [selectedDate, setSelectedDate] = useState(new Date().getDate());
+  
+  // Initialize with today's date string
+  const todayString = useMemo(() => {
+    const today = new Date();
+    return today.toDateString();
+  }, []);
+  
+  const [selectedDateString, setSelectedDateString] = useState(todayString);
 
   useEffect(() => {
     loadMedications();
@@ -40,21 +47,56 @@ export default function HomeScreen() {
       dates.push({
         dayName: dayNames[date.getDay()],
         date: date.getDate(),
+        dayOfWeek: date.getDay(), // 0 = Sunday, 6 = Saturday
+        fullDate: date,
+        dateString: date.toDateString(), // Unique identifier
         isToday: i === 0,
       });
     }
     return dates;
   }, []);
 
-  // Count total medications
-  const medicationsCount = useMemo(() => {
-    return medications.length;
-  }, [medications]);
+  // Get selected day info
+  const selectedDayInfo = useMemo(() => {
+    return weekDates.find(d => d.dateString === selectedDateString) || weekDates.find(d => d.isToday)!;
+  }, [weekDates, selectedDateString]);
 
-  // Count total tasks
-  const tasksCount = useMemo(() => {
-    return tasks.length;
-  }, [tasks]);
+  // Filter medications for selected day
+  const medicationsForDay = useMemo(() => {
+    const dayOfWeek = selectedDayInfo.dayOfWeek;
+    return medications.filter(medication => 
+      medication.schedules.some(schedule => 
+        schedule.isActive && schedule.daysOfWeek.includes(dayOfWeek)
+      )
+    );
+  }, [medications, selectedDayInfo]);
+
+  // Filter tasks for selected day
+  const tasksForDay = useMemo(() => {
+    const selectedDateObj = selectedDayInfo.fullDate;
+    const startOfDay = new Date(selectedDateObj);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(selectedDateObj);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const startTimestamp = startOfDay.getTime();
+    const endTimestamp = endOfDay.getTime();
+
+    const filtered = tasks.filter(task => {
+      if (!task.dueDate) {
+        // Tasks without due dates are shown every day
+        return true;
+      }
+      // dueDate is a timestamp (number), compare directly
+      return task.dueDate >= startTimestamp && task.dueDate <= endTimestamp;
+    });
+
+    return filtered;
+  }, [tasks, selectedDayInfo]);
+
+  // Count for selected day
+  const medicationsCount = medicationsForDay.length;
+  const tasksCount = tasksForDay.length;
 
   const handlePillsPress = () => {
     router.push('/pills');
@@ -85,51 +127,68 @@ export default function HomeScreen() {
               key={index}
               style={[
                 styles.dateItem,
-                item.isToday && styles.dateItemToday,
-                selectedDate === item.date && styles.dateItemSelected,
+                selectedDateString === item.dateString && styles.dateItemSelected,
               ]}
-              onPress={() => setSelectedDate(item.date)}
+              onPress={() => setSelectedDateString(item.dateString)}
               activeOpacity={0.7}
             >
               <Text style={[
                 styles.dayName,
-                (item.isToday || selectedDate === item.date) && styles.dayNameActive
+                selectedDateString === item.dateString && styles.dayNameActive
               ]}>
                 {item.dayName}
               </Text>
               <Text style={[
                 styles.dateNumber,
-                (item.isToday || selectedDate === item.date) && styles.dateNumberActive
+                selectedDateString === item.dateString && styles.dateNumberActive
               ]}>
                 {item.date}
               </Text>
+              {item.isToday && (
+                <View style={[
+                  styles.todayDot,
+                  selectedDateString === item.dateString && styles.todayDotSelected
+                ]} />
+              )}
             </TouchableOpacity>
           ))}
         </ScrollView>
 
-        {/* Cards List - 1 per row */}
+        {/* Cards List - 1 per row - Only show cards with items */}
         <View style={styles.cardsContainer}>
-          <View style={styles.cardItem}>
-            <CategoryCard
-              title="Pills"
-              count={medicationsCount}
-              iconName="pills"
-              iconLibrary="FontAwesome6"
-              iconColor={Colors.pillBlue}
-              onPress={handlePillsPress}
-            />
-          </View>
+          {medicationsCount > 0 && (
+            <View style={styles.cardItem}>
+              <CategoryCard
+                title="Pills"
+                count={medicationsCount}
+                iconName="pills"
+                iconLibrary="FontAwesome6"
+                iconColor={Colors.pillBlue}
+                onPress={handlePillsPress}
+              />
+            </View>
+          )}
 
-          <View style={styles.cardItem}>
-            <CategoryCard
-              title="Tasks"
-              count={tasksCount}
-              iconName="list-check"
-              iconLibrary="FontAwesome6"
-              iconColor={Colors.pillGreen}
-              onPress={handleTasksPress}
-            />
-          </View>
+          {tasksCount > 0 && (
+            <View style={styles.cardItem}>
+              <CategoryCard
+                title="Tasks"
+                count={tasksCount}
+                iconName="list-check"
+                iconLibrary="FontAwesome6"
+                iconColor={Colors.pillGreen}
+                onPress={handleTasksPress}
+              />
+            </View>
+          )}
+
+          {medicationsCount === 0 && tasksCount === 0 && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                No items scheduled for this day
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </View>
@@ -164,12 +223,22 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.cardBackground,
     borderWidth: 2,
     borderColor: Colors.inputBorder,
-  },
-  dateItemToday: {
-    backgroundColor: Colors.primary,
+    position: 'relative',
   },
   dateItemSelected: {
     backgroundColor: Colors.primary,
+    borderColor: Colors.inputBorder,
+  },
+  todayDot: {
+    position: 'absolute',
+    bottom: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.primary,
+  },
+  todayDotSelected: {
+    backgroundColor: Colors.cardBackground,
   },
   dayName: {
     fontSize: 13,
@@ -196,5 +265,16 @@ const styles = StyleSheet.create({
   cardItem: {
     height: 140,
     marginBottom: Spacing.md,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xxl,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontFamily: 'Montserrat_500Medium',
+    color: Colors.textSecondary,
+    textAlign: 'center',
   },
 });
