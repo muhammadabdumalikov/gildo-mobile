@@ -107,6 +107,27 @@ export default function RootLayout() {
             presentation: 'card',
           }} 
         />
+        <Stack.Screen 
+          name="pills/index" 
+          options={{ 
+            title: 'Pills',
+            presentation: 'card',
+          }} 
+        />
+        <Stack.Screen 
+          name="tasks/index" 
+          options={{ 
+            title: 'Tasks',
+            presentation: 'card',
+          }} 
+        />
+        <Stack.Screen 
+          name="wishlists/index" 
+          options={{ 
+            title: 'Wishlists',
+            presentation: 'card',
+          }} 
+        />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

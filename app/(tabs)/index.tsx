@@ -1,105 +1,62 @@
-import { useAppStore, useMedicationStore, useTaskStore } from '@/src/core/store';
-import { MedicationSchedule, MedicationWithSchedules } from '@/src/core/types';
+import { useAppStore, useCoinsStore, useMedicationStore, useTaskStore, useWishlistStore } from '@/src/core/store';
 import {
+  CategoryCard,
   Colors,
   HeaderCard,
-  PillCard,
   Spacing,
-  TaskCard,
-  TimeSlot,
-  Typography,
 } from '@/src/features/shared/components';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-interface MedicationByTime {
-  [time: string]: {
-    medication: MedicationWithSchedules;
-    schedule: MedicationSchedule;
-  }[];
-}
 
 export default function HomeScreen() {
   const { userName, profileImageUri } = useAppStore();
   const { medications, loadMedications, isLoading: isLoadingMedications } = useMedicationStore();
-  const { tasks, loadTasks, toggleTaskComplete, toggleTaskIncomplete, isLoading: isLoadingTasks } = useTaskStore();
+  const { tasks, loadTasks, isLoading: isLoadingTasks } = useTaskStore();
+  const { wishlistItems, loadWishlistItems, isLoading: isLoadingWishlist } = useWishlistStore();
+  const { balance: coinBalance, loadCoins } = useCoinsStore();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadMedications();
     loadTasks();
+    loadWishlistItems();
+    loadCoins();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Group medications by time
-  const medicationsByTime = useMemo(() => {
-    const grouped: MedicationByTime = {};
-    const today = new Date().getDay(); // 0 = Sunday, 6 = Saturday
-
-    medications.forEach((medication) => {
-      medication.schedules.forEach((schedule) => {
-        // Only show active schedules for today
-        if (schedule.isActive && schedule.daysOfWeek.includes(today)) {
-          if (!grouped[schedule.time]) {
-            grouped[schedule.time] = [];
-          }
-          grouped[schedule.time].push({ medication, schedule });
-        }
-      });
-    });
-
-    // Sort times
-    const sortedTimes = Object.keys(grouped).sort();
-    const sortedGrouped: MedicationByTime = {};
-    sortedTimes.forEach((time) => {
-      sortedGrouped[time] = grouped[time];
-    });
-
-    return sortedGrouped;
+  // Count total medications
+  const medicationsCount = useMemo(() => {
+    return medications.length;
   }, [medications]);
 
-  // Get all tasks, sorted: incomplete first (by due date), then completed (by completion date)
-  const sortedTasks = useMemo(() => {
-    return [...tasks].sort((a, b) => {
-      const dateA = a.dueDate || a.createdAt;
-      const dateB = b.dueDate || b.createdAt;
-      return dateA - dateB;
-    });
+  // Count total tasks
+  const tasksCount = useMemo(() => {
+    return tasks.length;
   }, [tasks]);
 
-  const handleMedicationPress = (medicationId: string) => {
-    router.push(`/medication/${medicationId}`);
-  };
-
-  const handleTaskPress = (taskId: string) => {
-    router.push(`/task/${taskId}`);
-  };
-
-  const handleTaskMarkComplete = async (taskId: string) => {
-    await toggleTaskComplete(taskId);
-  };
-
-  const handleTaskMarkIncomplete = async (taskId: string) => {
-    await toggleTaskIncomplete(taskId);
-  };
+  // Count total wishlist items
+  const wishlistCount = useMemo(() => {
+    return wishlistItems.length;
+  }, [wishlistItems]);
 
   const handleRefresh = async () => {
-    await Promise.all([loadMedications(), loadTasks()]);
+    await Promise.all([loadMedications(), loadTasks(), loadWishlistItems(), loadCoins()]);
   };
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>No medications for today</Text>
-      <Text style={styles.emptySubtitle}>
-        Tap the + button below to add your first medication reminder
-      </Text>
-    </View>
-  );
+  const handlePillsPress = () => {
+    router.push('/pills');
+  };
 
-  const renderSectionTitle = (title: string) => (
-    <Text style={styles.sectionTitle}>{title}</Text>
-  );
+  const handleTasksPress = () => {
+    router.push('/tasks');
+  };
+
+  const handleWishlistsPress = () => {
+    router.push('/wishlists');
+  };
 
   return (
     <View style={styles.container}>
@@ -112,50 +69,44 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isLoadingMedications || isLoadingTasks}
+            refreshing={isLoadingMedications || isLoadingTasks || isLoadingWishlist}
             onRefresh={handleRefresh}
           />
         }
       >
-        <HeaderCard userName={userName} profileImageUri={profileImageUri} />
+        <HeaderCard 
+          userName={userName} 
+          profileImageUri={profileImageUri} 
+          coinBalance={coinBalance}
+        />
 
-        {/* Tasks Section */}
-        {sortedTasks.length > 0 && (
-          <View style={styles.tasksSection}>
-            {renderSectionTitle("Today's Tasks")}
-            {sortedTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onPress={() => handleTaskPress(task.id)}
-                onMarkComplete={() => handleTaskMarkComplete(task.id)}
-                onMarkIncomplete={() => handleTaskMarkIncomplete(task.id)}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Medications Section */}
-        {Object.keys(medicationsByTime).length === 0 ? (
-          renderEmptyState()
-        ) : (
-          <View style={styles.medicationsSection}>
-            {renderSectionTitle('Medications')}
-            {Object.entries(medicationsByTime).map(([time, items]) => (
-              <View key={time}>
-                <TimeSlot time={time} />
-                {items.map(({ medication, schedule }) => (
-                  <PillCard
-                    key={`${medication.id}-${schedule.id}`}
-                    medication={medication}
-                    scheduleTime={schedule.time}
-                    onPress={() => handleMedicationPress(medication.id)}
-                  />
-                ))}
-              </View>
-            ))}
-          </View>
-        )}
+        {/* Category Cards */}
+        <View style={styles.categoriesSection}>
+          <CategoryCard
+            title="Pills"
+            count={medicationsCount}
+            iconName="pills"
+            iconLibrary="FontAwesome6"
+            iconColor={Colors.pillBlue}
+            onPress={handlePillsPress}
+          />
+          <CategoryCard
+            title="Tasks"
+            count={tasksCount}
+            iconName="list-check"
+            iconLibrary="FontAwesome6"
+            iconColor={Colors.pillGreen}
+            onPress={handleTasksPress}
+          />
+          <CategoryCard
+            title="Wishlists"
+            count={wishlistCount}
+            iconName="gift"
+            iconLibrary="FontAwesome6"
+            iconColor={Colors.pillPurple}
+            onPress={handleWishlistsPress}
+          />
+        </View>
 
         {/* Bottom padding for tab bar */}
         <View style={styles.bottomPadding} />
@@ -176,46 +127,10 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingBottom: 120, // Extra space for custom tab bar
   },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: Spacing.xl,
-  },
-  emptyTitle: {
-    ...Typography.subheader,
-    fontSize: 18,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    ...Typography.body,
-    fontSize: 14,
-    fontFamily: 'Montserrat_400Regular',
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
   bottomPadding: {
     height: 20,
   },
-  sectionTitle: {
-    ...Typography.subheader,
-    fontSize: 20,
-    fontWeight: '700',
-    fontFamily: 'Montserrat_700Bold',
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-    marginTop: Spacing.lg,
-  },
-  tasksSection: {
-    marginBottom: Spacing.xl,
-  },
-  medicationsSection: {
+  categoriesSection: {
     marginTop: Spacing.md,
   },
 });

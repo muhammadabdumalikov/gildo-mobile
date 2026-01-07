@@ -65,7 +65,40 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         activeOpacity={0.7}
         disabled={!onPress || task.isCompleted}
       >
+        {/* Left accent border for overdue or completed */}
+        {isOverdue && !task.isCompleted && (
+          <View style={[styles.leftAccent, { backgroundColor: Colors.pillRed }]} />
+        )}
+        {task.isCompleted && (
+          <View style={[styles.leftAccent, { backgroundColor: Colors.pillGreen }]} />
+        )}
+        
         <View style={styles.contentWrapper}>
+          {/* Status icon */}
+          <View style={styles.statusIconContainer}>
+            {task.isCompleted ? (
+              <View style={[styles.statusIcon, { backgroundColor: Colors.pillGreen }]}>
+                <IconSymbol
+                  name="check"
+                  library="FontAwesome6"
+                  size={14}
+                  color={Colors.cardBackground}
+                />
+              </View>
+            ) : (
+              <View style={[styles.statusIcon, { 
+                backgroundColor: isOverdue ? Colors.pillRed : Colors.pillBlue 
+              }]}>
+                <IconSymbol
+                  name={isOverdue ? "exclamation" : "list-check"}
+                  library="FontAwesome6"
+                  size={14}
+                  color={Colors.cardBackground}
+                />
+              </View>
+            )}
+          </View>
+
           <View style={styles.content}>
             <Text
             style={[
@@ -90,18 +123,21 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <View style={styles.footer}>
                 <View style={styles.footerLeft}>
                   {dueDateText && (
-                    <View style={styles.dateContainer}>
+                    <View style={[
+                      styles.dateContainer,
+                      (isOverdue && !task.isCompleted) ? styles.dateContainerOverdue : null
+                    ]}>
                       <IconSymbol
                         name="calendar-days"
                         library="FontAwesome6"
                         size={12}
-                        color={isOverdue ? Colors.pillRed : Colors.textSecondary}
+                        color={isOverdue && !task.isCompleted ? Colors.pillRed : Colors.textSecondary}
                       />
                       <View style={{ width: 4 }} />
                       <Text
                         style={[
                           styles.dateText,
-                          isOverdue ? styles.dateTextOverdue : null,
+                          isOverdue && !task.isCompleted ? styles.dateTextOverdue : null,
                         ]}
                       >
                         {dueDateText}
@@ -112,9 +148,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     <>
                       {dueDateText && <View style={{ width: Spacing.sm }} />}
                       <View style={styles.assignerBadge}>
+                        <IconSymbol
+                          name="user"
+                          library="FontAwesome6"
+                          size={10}
+                          color={Colors.primary}
+                        />
+                        <View style={{ width: 4 }} />
                         <Text style={styles.assignerText}>
                           {task.assigner === 'myself' ? 'Myself' :
-                           task.assigner === 'family' ? 'Family Member' :
+                           task.assigner === 'family' ? 'Family' :
                            task.assigner === 'friend' ? 'Friend' :
                            task.assigner === 'colleague' ? 'Colleague' :
                            task.assigner === 'other' ? 'Other' : task.assigner}
@@ -209,15 +252,34 @@ const styles = StyleSheet.create({
     borderColor: Colors.inputBorder,
     position: 'relative',
     zIndex: 1,
+    overflow: 'hidden',
   },
   cardCompleted: {
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.pillGreen,
     backgroundColor: '#F5FFF5', // Slight green tint
+  },
+  leftAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
   },
   contentWrapper: {
     flex: 1,
     flexDirection: 'row',
+  },
+  statusIconContainer: {
+    marginRight: Spacing.md,
+    paddingTop: 2,
+  },
+  statusIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   content: {
     flex: 1,
@@ -293,7 +355,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Montserrat_600SemiBold',
     color: Colors.primary,
-    textTransform: 'capitalize',
   },
   footer: {
     flexDirection: 'row',
@@ -318,11 +379,21 @@ const styles = StyleSheet.create({
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingVertical: 4,
+    paddingHorizontal: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  dateContainerOverdue: {
+    backgroundColor: '#FFEBEE',
+    borderColor: Colors.pillRed,
   },
   dateText: {
     ...Typography.caption,
     fontSize: 11,
-    fontFamily: 'Montserrat_400Regular',
+    fontFamily: 'Montserrat_500Medium',
     color: Colors.textSecondary,
   },
   dateTextOverdue: {
@@ -333,12 +404,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: Spacing.lg,
+    backgroundColor: '#FFF8E1',
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 2,
+    borderColor: '#FFE082',
   },
   coinText: {
     ...Typography.caption,
-    fontSize: 13,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Montserrat_700Bold',
     color: Colors.primary,
   },
   completedBadgeContainer: {

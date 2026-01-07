@@ -1,6 +1,7 @@
 export * from './AlertModal';
 export * from './AnimatedHeader';
 export * from './Button';
+export * from './CategoryCard';
 export * from './ColorPicker';
 export * from './ColorPickerModal';
 export * from './CubeSpinner';
@@ -25,4 +26,5 @@ export * from './theme';
 export * from './TimePicker';
 export * from './TimeSlot';
 export * from './useAlertModal';
+export * from './WishlistCard';
 
