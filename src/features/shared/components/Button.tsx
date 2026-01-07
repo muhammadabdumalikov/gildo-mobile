@@ -157,6 +157,15 @@ export const Button: React.FC<ButtonProps> = ({
     isPressed.value = withTiming(0, { duration: 150 });
   };
 
+  const handlePress = () => {
+    if (!disabled && !loading && onPress) {
+      // Delay the action to allow press animation to complete
+      setTimeout(() => {
+        onPress();
+      }, 150);
+    }
+  };
+
   return (
     <View style={[styles.buttonWrapper, fullWidth && styles.fullWidth]}>
       {/* Shadow box */}
@@ -170,7 +179,7 @@ export const Button: React.FC<ButtonProps> = ({
             fullWidth && styles.fullWidthButton,
             disabled && styles.disabled,
           ]}
-          onPress={onPress}
+          onPress={handlePress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           disabled={disabled || loading}

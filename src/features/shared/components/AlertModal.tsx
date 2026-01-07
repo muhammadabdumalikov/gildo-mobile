@@ -73,17 +73,23 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   const config = getVariantConfig(variant);
 
   const handleConfirm = () => {
-    if (onConfirm) {
-      onConfirm();
-    }
-    onClose();
+    // Delay to allow button press animation to complete
+    setTimeout(() => {
+      if (onConfirm) {
+        onConfirm();
+      }
+      onClose();
+    }, 150);
   };
 
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    }
-    onClose();
+    // Delay to allow button press animation to complete
+    setTimeout(() => {
+      if (onCancel) {
+        onCancel();
+      }
+      onClose();
+    }, 150);
   };
 
   return (

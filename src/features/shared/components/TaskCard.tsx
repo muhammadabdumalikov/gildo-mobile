@@ -112,13 +112,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     <>
                       {dueDateText && <View style={{ width: Spacing.sm }} />}
                       <View style={styles.assignerBadge}>
-                        <IconSymbol
-                          name="user"
-                          library="FontAwesome6"
-                          size={11}
-                          color={Colors.primary}
-                        />
-                        <View style={{ width: 4 }} />
                         <Text style={styles.assignerText}>
                           {task.assigner === 'myself' ? 'Myself' :
                            task.assigner === 'family' ? 'Family Member' :
