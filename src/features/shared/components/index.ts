@@ -27,6 +27,7 @@ export * from './TaskCard';
 export * from './theme';
 export * from './TimePicker';
 export * from './TimeSlot';
+export * from './Toggle';
 export * from './useAlertModal';
 export * from './WishlistCard';
 

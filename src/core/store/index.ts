@@ -4,4 +4,5 @@ export * from './taskStore';
 export * from './wishlistStore';
 export * from './coinsStore';
 export * from './familyStore';
+export * from './notificationStore';
 

@@ -4,10 +4,10 @@ import { router } from 'expo-router';
 import React, { ReactNode } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    Extrapolation,
-    interpolate,
-    SharedValue,
-    useAnimatedStyle,
+  Extrapolation,
+  interpolate,
+  SharedValue,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography } from './theme';

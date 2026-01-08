@@ -48,8 +48,7 @@ export default function ProfileScreen() {
   };
 
   const handleNotificationSettings = () => {
-    // TODO: Navigate to notification settings
-    console.log('Notification Settings');
+    router.push('/notifications');
   };
 
   const handleReminderPreferences = () => {
