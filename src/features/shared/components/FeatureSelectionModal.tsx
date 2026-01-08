@@ -68,7 +68,7 @@ export const FeatureSelectionModal: React.FC<FeatureSelectionModalProps> = ({
       return;
     }
     onClose();
-    router.push(feature.route);
+    router.push(feature.route as any);
   };
 
   return (

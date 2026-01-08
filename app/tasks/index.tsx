@@ -1,6 +1,7 @@
 import { useAppStore, useTaskStore } from '@/src/core/store';
 import {
   AnimatedHeader,
+  BorderRadius,
   Colors,
   Spacing,
   TaskCard,
@@ -18,7 +19,6 @@ const Tab = createMaterialTopTabNavigator();
 function MyTasksScreen() {
   const { tasks, loadTasks, toggleTaskComplete, toggleTaskIncomplete, isLoading } = useTaskStore();
   const { userName } = useAppStore();
-  const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -163,6 +163,8 @@ export default function TasksListScreen() {
     loadTasks();
   }, []);
 
+  const headerHeight = 60 + insets.top;
+
   return (
     <View style={styles.container}>
       <AnimatedHeader
@@ -173,30 +175,40 @@ export default function TasksListScreen() {
         blurHeader={true}
       />
       
-      <View style={[styles.tabContainer, { top: 60 + insets.top }]}>
+      <View style={[styles.tabNavigatorContainer, { top: headerHeight }]}>
         <Tab.Navigator
           screenOptions={{
             tabBarActiveTintColor: Colors.primary,
             tabBarInactiveTintColor: Colors.textSecondary,
             tabBarLabelStyle: {
               fontSize: 15,
-              fontFamily: 'Montserrat_600SemiBold',
+              fontFamily: 'Montserrat_700Bold',
               textTransform: 'none',
+              fontWeight: '700',
             },
             tabBarStyle: {
-              backgroundColor: Colors.background,
+              backgroundColor: 'transparent',
               elevation: 0,
               shadowOpacity: 0,
-              borderBottomWidth: 1,
-              borderBottomColor: Colors.inputBorder,
+              borderTopWidth: 0,
+              borderBottomWidth: 0,
+              // paddingHorizontal: Spacing.lg,
+              paddingTop: Spacing.md,
             },
+            tabBarScrollEnabled: false,
             tabBarIndicatorStyle: {
               backgroundColor: Colors.primary,
-              height: 3,
-              borderTopLeftRadius: 3,
-              borderTopRightRadius: 3,
+              height: 4,
+              borderTopLeftRadius: BorderRadius.sm,
+              borderTopRightRadius: BorderRadius.sm,
+            },
+            tabBarIndicatorContainerStyle: {
+              paddingHorizontal: Spacing.xl,
             },
             tabBarPressColor: Colors.primary + '20',
+            tabBarItemStyle: {
+              paddingVertical: Spacing.md,
+            },
           }}
         >
           <Tab.Screen 
@@ -220,12 +232,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  tabContainer: {
+  tabNavigatorContainer: {
     position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: 5,
+  },
+  tabBarWrapper: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    position: 'relative',
+  },
+  tabBarShadowBox: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    right: -4,
+    bottom: -4,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: BorderRadius.lg,
+    zIndex: 0,
+  },
+  tabBarContainer: {
+    backgroundColor: Colors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 3,
+    borderColor: Colors.inputBorder,
+    overflow: 'hidden',
+    position: 'relative',
+    zIndex: 1,
   },
   scrollView: {
     flex: 1,

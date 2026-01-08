@@ -235,80 +235,78 @@ export default function FamilyMemberFormScreen() {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-          {/* Profile Image Picker */}
-          <ProfileImagePicker
-            imageUri={profileImage}
-            onImageSelected={setProfileImage}
-            size={100}
-          />
+        {/* Profile Image Picker */}
+        <ProfileImagePicker
+          imageUri={profileImage}
+          onImageSelected={setProfileImage}
+          size={100}
+        />
 
-          <Input
-            label="Name *"
-            placeholder="Enter family member's name"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
+        <Input
+          label="Name *"
+          placeholder="Enter family member's name"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+        />
 
-          <View style={styles.rowContainer}>
-            <View style={styles.relationshipContainer}>
-              <Picker
-                label="Relationship *"
-                placeholder="Select relationship"
-                value={relationship}
-                onValueChange={setRelationship}
-                options={relationshipOptions}
-              />
-            </View>
-
-            <View style={styles.iconContainer}>
-              <IconPicker
-                label="Icon"
-                placeholder="Select"
-                value={relationshipIcon}
-                onValueChange={setRelationshipIcon}
-                icons={iconOptions}
-                accentColor={getRelationshipColor(relationship)}
-              />
-            </View>
+        <View style={styles.rowContainer}>
+          <View style={styles.relationshipContainer}>
+            <Picker
+              label="Relationship *"
+              placeholder="Select relationship"
+              value={relationship}
+              onValueChange={setRelationship}
+              options={relationshipOptions}
+            />
           </View>
 
-          <DatePicker
-            label="Date of Birth"
-            value={dateOfBirth}
-            onValueChange={setDateOfBirth}
-            placeholder="Select date of birth"
-            maximumDate={new Date()}
-          />
+          <View style={styles.iconContainer}>
+            <IconPicker
+              label="Icon"
+              placeholder="Select"
+              value={relationshipIcon}
+              onValueChange={setRelationshipIcon}
+              icons={iconOptions}
+              accentColor={getRelationshipColor(relationship)}
+            />
+          </View>
+        </View>
 
-          {isNew ? (
+        <DatePicker
+          label="Date of Birth"
+          value={dateOfBirth}
+          onValueChange={setDateOfBirth}
+          placeholder="Select date of birth"
+          maximumDate={new Date()}
+        />
+
+        {isNew ? (
+          <View style={styles.addMemberButtonWrapper}>
             <Button
               title="Add Member"
               onPress={handleSave}
               loading={loading}
             />
-          ) : (
-            <View style={styles.buttonContainer}>
-              <View style={styles.buttonWrapper}>
-                <Button
-                  title="Save Changes"
-                  onPress={handleSave}
-                  loading={loading}
-                />
-              </View>
-              <View style={styles.buttonWrapper}>
-                <Button
-                  title="Delete Member"
-                  onPress={handleDelete}
-                  variant="destructive"
-                  loading={loading}
-                />
-              </View>
-            </View>
-          )}
+          </View>
+        ) : (
+          <View style={styles.buttonContainer}>
+            <Button
+              title="Delete Member"
+              onPress={handleDelete}
+              variant="destructive"
+              loading={loading}
+            />
+            <Button
+              title="Save Changes"
+              onPress={handleSave}
+              loading={loading}
+            />
+          </View>
+        )}
 
-          {/* Bottom padding */}
-          <View style={styles.bottomPadding} />
+        {/* Bottom padding */}
+        <View style={styles.bottomPadding} />
       </Animated.ScrollView>
 
       {AlertModal}
@@ -342,9 +340,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.md,
     marginTop: Spacing.md,
+    justifyContent: 'space-between',
   },
-  buttonWrapper: {
-    flex: 1,
+  addMemberButtonWrapper: {
+    alignSelf:'flex-end',
   },
   bottomPadding: {
     height: 40,

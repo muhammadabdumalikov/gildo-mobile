@@ -24,7 +24,8 @@ export default function PillsListScreen() {
   const { medications, loadMedications, isLoading } = useMedicationStore();
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
-
+  const headerHeight = 60 + insets.top;
+  
   useEffect(() => {
     loadMedications();
   }, []);
@@ -79,10 +80,6 @@ export default function PillsListScreen() {
     </View>
   );
 
-  const renderSectionTitle = (title: string) => (
-    <Text style={styles.sectionTitle}>{title}</Text>
-  );
-
   return (
     <View style={styles.container}>
       <AnimatedHeader
@@ -96,7 +93,7 @@ export default function PillsListScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: 120 + insets.top },
+          { paddingTop: headerHeight },
         ]}
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
@@ -110,7 +107,6 @@ export default function PillsListScreen() {
           renderEmptyState()
         ) : (
           <View style={styles.medicationsSection}>
-            {renderSectionTitle('Medications')}
             {Object.entries(medicationsByTime).map(([time, items]) => (
               <View key={time}>
                 <TimeSlot time={time} />
@@ -144,7 +140,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.lg,
-    paddingBottom: 120, // Extra space for custom tab bar
   },
   emptyContainer: {
     flex: 1,
