@@ -34,8 +34,8 @@ const getDaysInMonth = (year: number, month: number): number => {
 };
 
 // Generate years (current year going back 100 years)
-const generateYears = (): string[] => {
-  const currentYear = new Date().getFullYear();
+const generateYears = (maximumDate?: Date): string[] => {
+  const currentYear = maximumDate ? maximumDate.getFullYear() : new Date().getFullYear();
   return Array.from({ length: 101 }, (_, i) => (currentYear - i).toString());
 };
 
@@ -236,7 +236,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const [localYear, setLocalYear] = useState(initialDate.getFullYear().toString());
 
   // Generate years array
-  const years = useMemo(() => generateYears(), []);
+  const years = useMemo(() => generateYears(maximumDate), []);
 
   // Generate days array based on current month and year
   const days = useMemo(() => {

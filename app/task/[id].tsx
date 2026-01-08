@@ -1,5 +1,5 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useTaskStore } from '@/src/core/store';
+import { useAppStore, useFamilyStore, useTaskStore } from '@/src/core/store';
 import {
   AnimatedHeader,
   Button,
@@ -12,7 +12,7 @@ import {
   useAlertModal
 } from '@/src/features/shared/components';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -34,6 +34,8 @@ export default function TaskFormScreen() {
     updateTask,
     deleteTask,
   } = useTaskStore();
+  const { familyMembers, loadFamilyMembers } = useFamilyStore();
+  const { userName } = useAppStore();
   const scrollY = useSharedValue(0);
 
   // Alert modal
@@ -48,14 +50,27 @@ export default function TaskFormScreen() {
   const [assigner, setAssigner] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Assigner options
-  const assignerOptions = [
-    { label: 'Myself', value: 'myself' },
-    { label: 'Family Member', value: 'family' },
-    { label: 'Friend', value: 'friend' },
-    { label: 'Colleague', value: 'colleague' },
-    { label: 'Other', value: 'other' },
-  ];
+  // Load family members on mount
+  useEffect(() => {
+    loadFamilyMembers();
+  }, [loadFamilyMembers]);
+
+  // Assigner options - include myself and all family members
+  const assignerOptions = useMemo(() => {
+    const options = [
+      { label: 'Myself', value: userName || 'myself' },
+    ];
+    
+    // Add family members
+    familyMembers.forEach((member) => {
+      options.push({
+        label: member.name,
+        value: member.name,
+      });
+    });
+    
+    return options;
+  }, [familyMembers, userName]);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -203,6 +218,7 @@ export default function TaskFormScreen() {
               value={dueDate}
               onValueChange={setDueDate}
               placeholder="Select date"
+              maximumDate={new Date(new Date().getFullYear() + 3, 11, 31)}
             />
           </View>
         </View>

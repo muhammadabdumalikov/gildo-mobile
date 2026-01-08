@@ -1,6 +1,7 @@
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import React from 'react';
-import { TouchableOpacity, StyleSheet, Text } from 'react-native';
-import { Colors, Shadow, BorderRadius } from './theme';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { BorderRadius, Colors, Spacing } from './theme';
 
 interface FloatingActionButtonProps {
   onPress: () => void;
@@ -8,30 +9,50 @@ interface FloatingActionButtonProps {
 
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ onPress }) => {
   return (
-    <TouchableOpacity style={styles.fab} onPress={onPress} activeOpacity={0.8}>
-      <Text style={styles.icon}>+</Text>
-    </TouchableOpacity>
+    <View style={styles.fabWrapper}>
+      {/* Shadow box */}
+      <View style={styles.shadowBox} />
+      <TouchableOpacity style={styles.fab} onPress={onPress} activeOpacity={0.7}>
+        <IconSymbol 
+          name="plus" 
+          library="FontAwesome6" 
+          size={28} 
+          color={Colors.cardBackground} 
+        />
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  fab: {
+  fabWrapper: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 100, // Above the tab bar
     right: 24,
-    width: 64,
-    height: 64,
+    width: 70,
+    height: 70,
+  },
+  shadowBox: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    right: -4,
+    bottom: -4,
+    backgroundColor: Colors.inputBorder,
+    borderRadius: BorderRadius.round,
+    zIndex: 0,
+  },
+  fab: {
+    width: 70,
+    height: 70,
     borderRadius: BorderRadius.round,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadow.large,
-  },
-  icon: {
-    fontSize: 32,
-    color: Colors.cardBackground,
-    fontWeight: '300',
-    lineHeight: 32,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
+    position: 'relative',
+    zIndex: 1,
   },
 });
 

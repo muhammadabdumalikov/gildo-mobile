@@ -55,6 +55,9 @@ export interface FamilyMember {
   id: string;
   name: string;
   relationship: string;
+  relationshipIcon?: string; // Custom icon name for the relationship
+  dateOfBirth?: string; // ISO date string
+  profileImageUri?: string;
   medications: string[]; // medication IDs
 }
 

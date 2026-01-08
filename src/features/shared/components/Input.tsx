@@ -51,7 +51,7 @@ export const Input: React.FC<InputProps> = ({
               styles.input,
               isFocused && styles.inputFocused,
               error && styles.inputError,
-              rightIcon && styles.inputWithIcon,
+              rightIcon ? styles.inputWithIcon : undefined,
               style,
             ]}
             placeholderTextColor="rgba(102, 102, 102, 0.8)" // font-color-sub with 0.8 opacity

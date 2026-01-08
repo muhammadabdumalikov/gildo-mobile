@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   todayDot: {
     position: 'absolute',
-    bottom: 8,
+    bottom: 6,
     width: 6,
     height: 6,
     borderRadius: 3,

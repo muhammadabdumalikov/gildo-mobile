@@ -1,7 +1,7 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import React from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors, Spacing, Typography } from './theme';
+import { BorderRadius, Colors, Spacing, Typography } from './theme';
 
 interface PickerOption {
   label: string;
@@ -25,7 +25,7 @@ export const Picker: React.FC<PickerProps> = ({
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  const selectedOption = options?.find((opt) => opt.value === value);
   const displayValue = selectedOption ? selectedOption.label : placeholder;
 
   const handleSelect = (optionValue: string) => {
@@ -36,25 +36,28 @@ export const Picker: React.FC<PickerProps> = ({
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={styles.inputWrapper}>
-        {/* Shadow effect - positioned behind the input */}
-        <View style={styles.shadowBox} />
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => setIsOpen(true)}
-          activeOpacity={0.7}
+      <TouchableOpacity
+        style={styles.input}
+        onPress={() => setIsOpen(true)}
+        activeOpacity={0.7}
+      >
+        <Text
+          style={[
+            styles.valueText,
+            !selectedOption && styles.placeholderText,
+          ]}
+          numberOfLines={1}
         >
-          <Text
-            style={[
-              styles.valueText,
-              !selectedOption && styles.placeholderText,
-            ]}
-          >
-            {displayValue}
-          </Text>
-          <Text style={styles.arrow}>▼</Text>
-        </TouchableOpacity>
-      </View>
+          {displayValue}
+        </Text>
+        <View style={styles.arrowContainer}>
+          <IconSymbol
+            name="chevron.down"
+            size={16}
+            color={Colors.textSecondary}
+          />
+        </View>
+      </TouchableOpacity>
 
       <Modal
         visible={isOpen}
@@ -62,44 +65,70 @@ export const Picker: React.FC<PickerProps> = ({
         animationType="fade"
         onRequestClose={() => setIsOpen(false)}
       >
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={() => setIsOpen(false)}
-        >
+        <View style={styles.overlay}>
+          <TouchableOpacity
+            style={styles.overlayTouchable}
+            activeOpacity={1}
+            onPress={() => setIsOpen(false)}
+          />
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label || 'Select'}</Text>
-              <TouchableOpacity onPress={() => setIsOpen(false)}>
-                <Text style={styles.closeButton}>✕</Text>
+              <TouchableOpacity 
+                onPress={() => setIsOpen(false)}
+                style={styles.closeButton}
+                activeOpacity={0.7}
+              >
+                <IconSymbol
+                  name="xmark"
+                  size={20}
+                  color={Colors.textSecondary}
+                />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.optionsList}>
-              {options.map((option) => (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[
-                    styles.option,
-                    value === option.value && styles.selectedOption,
-                  ]}
-                  onPress={() => handleSelect(option.value)}
-                >
-                  <Text
+            <ScrollView 
+              style={styles.optionsList}
+              showsVerticalScrollIndicator={false}
+            >
+              {options.map((option, index) => {
+                const isSelected = value === option.value;
+                const isLast = index === options.length - 1;
+                
+                return (
+                  <TouchableOpacity
+                    key={option.value}
                     style={[
-                      styles.optionText,
-                      value === option.value && styles.selectedOptionText,
+                      styles.option,
+                      isSelected && styles.selectedOption,
+                      isLast && styles.lastOption,
                     ]}
+                    onPress={() => handleSelect(option.value)}
+                    activeOpacity={0.7}
                   >
-                    {option.label}
-                  </Text>
-                  {value === option.value && (
-                    <Text style={styles.checkmark}><IconSymbol name="checkmark" color={Colors.primary} /></Text>
-                  )}
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.optionText,
+                        isSelected && styles.selectedOptionText,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {isSelected && (
+                      <View style={styles.checkmarkContainer}>
+                        <IconSymbol
+                          name="check"
+                          library="FontAwesome6"
+                          size={16}
+                          color={Colors.primary}
+                        />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
@@ -116,20 +145,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     fontFamily: 'Montserrat_600SemiBold',
   },
-  inputWrapper: {
-    position: 'relative',
-    width: '100%',
-  },
-  shadowBox: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    right: -4,
-    bottom: -4,
-    backgroundColor: Colors.inputBorder, // main-color for shadow
-    borderRadius: 5,
-    zIndex: 0,
-  },
   input: {
     backgroundColor: Colors.cardBackground,
     borderRadius: 5,
@@ -137,39 +152,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 12,
     borderWidth: 2,
-    borderColor: Colors.inputBorder, // main-color
+    borderColor: Colors.inputBorder,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    position: 'relative',
-    zIndex: 1,
   },
   valueText: {
     fontSize: 15,
     fontWeight: '600',
     fontFamily: 'Montserrat_600SemiBold',
-    color: Colors.inputBorder, // font-color matching input style
+    color: Colors.textPrimary,
+    flex: 1,
   },
   placeholderText: {
-    color: 'rgba(102, 102, 102, 0.8)', // font-color-sub with 0.8 opacity
+    color: 'rgba(102, 102, 102, 0.8)',
   },
-  arrow: {
-    fontSize: 12,
-    color: Colors.textSecondary,
+  arrowContainer: {
+    marginLeft: Spacing.sm,
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
+    alignItems: 'center',
     padding: Spacing.xl,
+  },
+  overlayTouchable: {
+    ...StyleSheet.absoluteFillObject,
   },
   modalContent: {
     backgroundColor: Colors.cardBackground,
-    borderRadius: 5, // Match input border radius
-    maxHeight: '70%',
+    borderRadius: 5,
     overflow: 'hidden',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: Colors.inputBorder,
+    width: '100%',
+    maxHeight: '70%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -178,49 +196,72 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderBottomWidth: 2,
     borderBottomColor: Colors.inputBorder,
+    backgroundColor: Colors.background,
   },
   modalTitle: {
     ...Typography.title,
-    fontSize: 18,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 20,
+    fontWeight: '700',
+    fontFamily: 'Montserrat_700Bold',
     color: Colors.textPrimary,
   },
   closeButton: {
-    fontSize: 24,
-    color: Colors.textSecondary,
-    fontWeight: '300',
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.cardBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
   },
   optionsList: {
     maxHeight: 400,
   },
   option: {
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    padding: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
+    borderRadius: 5,
+    backgroundColor: Colors.cardBackground,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: 50,
+  },
+  lastOption: {
+    marginBottom: Spacing.md,
   },
   selectedOption: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.cardBackground,
+    borderColor: Colors.primary,
+    borderWidth: 2,
   },
   optionText: {
     fontSize: 15,
-    fontFamily: 'Montserrat_400Regular',
+    fontFamily: 'Montserrat_600SemiBold',
     color: Colors.textPrimary,
+    flex: 1,
   },
   selectedOptionText: {
     fontSize: 15,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
-    color: Colors.primary,
-  },
-  checkmark: {
-    fontSize: 18,
-    color: Colors.primary,
     fontWeight: '700',
     fontFamily: 'Montserrat_700Bold',
+    color: Colors.primary,
+  },
+  checkmarkContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.cardBackground,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.sm,
   },
 });
 

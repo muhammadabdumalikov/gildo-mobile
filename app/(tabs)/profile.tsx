@@ -1,18 +1,18 @@
 import { useAppStore } from '@/src/core/store';
 import {
-    AnimatedHeader,
-    Colors,
-    ProfileImage,
-    SettingsItem,
-    Spacing,
-    Typography,
+  AnimatedHeader,
+  Colors,
+  ProfileImage,
+  SettingsItem,
+  Spacing,
+  Typography
 } from '@/src/features/shared/components';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    useAnimatedScrollHandler,
-    useSharedValue,
+  useAnimatedScrollHandler,
+  useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -43,9 +43,8 @@ export default function ProfileScreen() {
     router.push('/profile/edit');
   };
 
-  const handleAccountsCenter = () => {
-    // TODO: Navigate to accounts center
-    console.log('Accounts Center');
+  const handleFamilyMembers = () => {
+    router.push('/family');
   };
 
   const handleNotificationSettings = () => {
@@ -77,7 +76,6 @@ export default function ProfileScreen() {
     // TODO: Navigate to about us
     console.log('About Us');
   };
-
   return (
     <View style={styles.container}>
       <AnimatedHeader title="Profile Settings" scrollY={scrollY} showBottomBorder blurHeader={true} />
@@ -114,10 +112,10 @@ export default function ProfileScreen() {
           </View>
 
           <SettingsItem
-            icon="person.fill"
-            title="Accounts Center"
-            subtitle="Manage your Account Details"
-            onPress={handleAccountsCenter}
+            icon="person.2.fill"
+            title="Family Members"
+            subtitle="Manage your family members"
+            onPress={handleFamilyMembers}
           />
         </View>
 
@@ -252,5 +250,45 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 100,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  manageLink: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_600SemiBold',
+    fontWeight: '600',
+    color: Colors.pillBlue,
+  },
+  familyList: {
+    marginTop: Spacing.xs,
+  },
+  emptyFamilyContainer: {
+    backgroundColor: Colors.cardBackground,
+    borderRadius: 5,
+    padding: Spacing.lg,
+    borderWidth: 2,
+    borderColor: Colors.inputBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 100,
+  },
+  emptyFamilyText: {
+    ...Typography.title,
+    fontSize: 16,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    textAlign: 'center',
+  },
+  emptyFamilySubtext: {
+    ...Typography.body,
+    fontSize: 13,
+    fontFamily: 'Montserrat_400Regular',
+    color: Colors.textSecondary,
+    textAlign: 'center',
   },
 });

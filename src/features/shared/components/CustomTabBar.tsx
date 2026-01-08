@@ -102,7 +102,7 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
               size={size}
               name={iconName}
               library={library}
-              color={isFocused ? Colors.cardBackground : Colors.textSecondary}
+              color={isFocused ? Colors.background : Colors.textSecondary}
             />
           </View>
         </View>
@@ -284,14 +284,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 20,
     height: 3,
-    backgroundColor: Colors.textPrimary,
+    backgroundColor: Colors.background,
     borderRadius: 2,
   },
   plusLine2: {
     position: 'absolute',
     width: 3,
     height: 20,
-    backgroundColor: Colors.textPrimary,
+    backgroundColor: Colors.background,
     borderRadius: 2,
   },
 });
