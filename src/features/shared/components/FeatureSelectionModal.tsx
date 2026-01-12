@@ -46,7 +46,7 @@ const FEATURES: FeatureOption[] = [
     iconName: 'heart',
     iconLibrary: 'FontAwesome6',
     iconColor: '#EF5350',
-    disabled: true,
+    route: '/wishlist/new',
   },
   {
     id: 'notes',

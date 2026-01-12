@@ -11,6 +11,7 @@ export interface Medication {
   pillShape: PillShape;
   quantity: number;
   timing: PillTiming;
+  assignedTo?: string; // Child/Second user who should take this medication
   createdAt: number;
   updatedAt: number;
 }
@@ -65,7 +66,7 @@ export interface WishlistItem {
   id: string;
   name: string;
   description: string;
-  coinCost: number;
+  referenceLink?: string;
   imageUrl?: string;
   isRedeemed: boolean;
 }

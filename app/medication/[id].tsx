@@ -1,4 +1,4 @@
-import { useMedicationStore } from "@/src/core/store";
+import { useAppStore, useFamilyStore, useMedicationStore } from "@/src/core/store";
 import {
   Medication,
   MedicationSchedule,
@@ -22,7 +22,7 @@ import {
   useAlertModal,
 } from "@/src/features/shared/components";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -46,6 +46,8 @@ export default function MedicationFormScreen() {
     updateMedication,
     deleteMedication,
   } = useMedicationStore();
+  const { familyMembers, loadFamilyMembers } = useFamilyStore();
+  const { userName } = useAppStore();
   const scrollY = useSharedValue(0);
   const insets = useSafeAreaInsets();
 
@@ -63,7 +65,30 @@ export default function MedicationFormScreen() {
   const [frequency, setFrequency] = useState<FrequencyType>("every_day");
   const [time, setTime] = useState("08:00");
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]); // All days
+  const [assignedTo, setAssignedTo] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Load family members on mount
+  useEffect(() => {
+    loadFamilyMembers();
+  }, [loadFamilyMembers]);
+
+  // Assigner options - include myself and all family members
+  const assignerOptions = useMemo(() => {
+    const options = [
+      { label: 'Myself', value: userName || 'myself' },
+    ];
+    
+    // Add family members
+    familyMembers.forEach((member) => {
+      options.push({
+        label: member.name,
+        value: member.name,
+      });
+    });
+    
+    return options;
+  }, [familyMembers, userName]);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -82,6 +107,9 @@ export default function MedicationFormScreen() {
         setPillShape(medication.pillShape);
         setQuantity(medication.quantity.toString());
         setTiming(medication.timing);
+        if (medication.assignedTo) {
+          setAssignedTo(medication.assignedTo);
+        }
 
         // Load first schedule if exists
         if (medication.schedules.length > 0) {
@@ -151,6 +179,7 @@ export default function MedicationFormScreen() {
         pillShape,
         quantity: parseInt(quantity),
         timing,
+        assignedTo: assignedTo || undefined,
         createdAt: now,
         updatedAt: now,
       };
@@ -326,9 +355,17 @@ export default function MedicationFormScreen() {
                 ]}
                 onValueChange={(value) => setTiming(value as PillTiming)}
               />
-            </View>
           </View>
         </View>
+      </View>
+
+        <Picker
+          label="Assign To (Optional)"
+          value={assignedTo}
+          options={assignerOptions}
+          onValueChange={setAssignedTo}
+          placeholder="Select assignee"
+        />
 
         <View style={styles.buttonContainer}>
           <Button

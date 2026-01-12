@@ -2,6 +2,7 @@ import { useWishlistStore } from '@/src/core/store';
 import {
   AnimatedHeader,
   Colors,
+  FloatingActionButton,
   Spacing,
   WishlistCard,
 } from '@/src/features/shared/components';
@@ -37,8 +38,11 @@ export default function WishlistsListScreen() {
   }, [wishlistItems]);
 
   const handleWishlistItemPress = (itemId: string) => {
-    // Navigate to wishlist item detail if needed
-    // router.push(`/wishlist/${itemId}`);
+    router.push(`/wishlist/${itemId}`);
+  };
+
+  const handleAddWishlistItem = () => {
+    router.push('/wishlist/new');
   };
 
   const handleRefresh = async () => {
@@ -99,6 +103,9 @@ export default function WishlistsListScreen() {
         {/* Bottom padding for tab bar */}
         <View style={styles.bottomPadding} />
       </Animated.ScrollView>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton onPress={handleAddWishlistItem} />
     </View>
   );
 }

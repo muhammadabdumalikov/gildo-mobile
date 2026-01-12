@@ -98,6 +98,13 @@ export default function RootLayout() {
           }} 
         />
         <Stack.Screen 
+          name="wishlist/[id]" 
+          options={{ 
+            headerShown: false,
+            presentation: 'modal',
+          }} 
+        />
+        <Stack.Screen 
           name="profile/edit" 
           options={{ 
             headerShown: false,

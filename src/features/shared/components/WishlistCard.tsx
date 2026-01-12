@@ -1,5 +1,6 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { WishlistItem } from '@/src/core/types';
+import { Linking } from 'react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BorderRadius, Colors, Spacing, Typography } from './theme';
@@ -13,6 +14,18 @@ export const WishlistCard: React.FC<WishlistCardProps> = ({
   item,
   onPress,
 }) => {
+  const handleLinkPress = async () => {
+    if (item.referenceLink) {
+      const url = item.referenceLink.startsWith('http') 
+        ? item.referenceLink 
+        : `https://${item.referenceLink}`;
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      }
+    }
+  };
+
   return (
     <View style={styles.cardWrapper}>
       {/* Shadow box */}
@@ -68,19 +81,25 @@ export const WishlistCard: React.FC<WishlistCardProps> = ({
             </Text>
           )}
           
-          {/* Coin cost at bottom */}
-          {!item.isRedeemed && (
+          {/* Reference link at bottom */}
+          {!item.isRedeemed && item.referenceLink && (
             <View style={styles.bottomRow}>
-              <View style={styles.priceTag}>
+              <TouchableOpacity
+                style={styles.linkTag}
+                onPress={handleLinkPress}
+                activeOpacity={0.7}
+              >
                 <IconSymbol
-                  name="coins"
+                  name="link"
                   library="FontAwesome6"
                   size={14}
                   color={Colors.primary}
                 />
                 <View style={{ width: 4 }} />
-                <Text style={styles.priceText}>{item.coinCost} coins</Text>
-              </View>
+                <Text style={styles.linkText} numberOfLines={1}>
+                  View Link
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -193,17 +212,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: Spacing.xs,
   },
-  priceTag: {
+  linkTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF8E1',
+    backgroundColor: '#E3F2FD',
     paddingVertical: 4,
     paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    borderColor: '#FFE082',
+    borderColor: '#90CAF9',
   },
-  priceText: {
+  linkText: {
     fontSize: 12,
     fontWeight: '600',
     fontFamily: 'Montserrat_600SemiBold',
