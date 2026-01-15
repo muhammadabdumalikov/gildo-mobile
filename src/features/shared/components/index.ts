@@ -13,6 +13,7 @@ export * from './FeatureCard';
 export * from './FeatureSelectionModal';
 export * from './FloatingActionButton';
 export * from './FrequencySelector';
+export * from './GoogleSignInButton';
 export * from './HeaderCard';
 export * from './IconPicker';
 export * from './Input';

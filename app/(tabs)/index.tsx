@@ -1,4 +1,5 @@
 import { useAppStore, useCoinsStore, useMedicationStore, useTaskStore, useWishlistStore } from '@/src/core/store';
+import { useAuthStore } from '@/src/core/store/authStore';
 import {
   CategoryCard,
   Colors,
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const { tasks, loadTasks } = useTaskStore();
   const { loadWishlistItems } = useWishlistStore();
   const { balance: coinBalance, loadCoins } = useCoinsStore();
+  const { isAuthenticated } = useAuthStore();
   const insets = useSafeAreaInsets();
   
   // Initialize with today's date string
@@ -28,12 +30,31 @@ export default function HomeScreen() {
   const [selectedDateString, setSelectedDateString] = useState(todayString);
 
   useEffect(() => {
-    loadMedications();
-    loadTasks();
-    loadWishlistItems();
-    loadCoins();
+    // Only load data if authenticated
+    if (isAuthenticated) {
+      // Small delay to ensure token is available in AsyncStorage after auth
+      const loadData = async () => {
+        // Verify token exists before loading data
+        const { apiClient } = await import('@/src/core/api/client');
+        let retries = 0;
+        while (retries < 5) {
+          const token = await apiClient.getToken();
+          if (token) {
+            loadMedications();
+            loadTasks();
+            loadWishlistItems();
+            loadCoins();
+            return;
+          }
+          await new Promise(resolve => setTimeout(resolve, 100));
+          retries++;
+        }
+        console.warn('Token not available after authentication');
+      };
+      loadData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated]);
 
   // Generate week dates
   const weekDates = useMemo(() => {

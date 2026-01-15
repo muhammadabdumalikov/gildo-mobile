@@ -11,11 +11,14 @@ import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
+import { Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { notificationService } from '@/src/core/notifications';
 import { NotificationHandler } from '@/src/core/notifications/NotificationHandler';
 import { useAppStore, useMedicationStore } from '@/src/core/store';
+import { useAuthStore } from '@/src/core/store/authStore';
 import { Colors } from '@/src/features/shared/components';
 
 export const unstable_settings = {
@@ -26,6 +29,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { initialize, hasCompletedOnboarding, isInitialized } = useAppStore();
   const { loadMedications } = useMedicationStore();
+  const { isAuthenticated, checkAuth } = useAuthStore();
 
   // Load Montserrat font
   const [fontsLoaded] = useFonts({
@@ -38,11 +42,28 @@ export default function RootLayout() {
   useEffect(() => {
     if (!fontsLoaded) return;
 
+    // Configure Google Sign-In once when app loads
+    // Following: https://dev.to/yhoungbrown/google-sign-in-in-react-native-expo-a-practical-production-ready-guide-5g48
+    GoogleSignin.configure({
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      // iOS requires iosClientId if GoogleService-Info.plist is not present
+      ...(Platform.OS === 'ios' && process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID && {
+        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+      }),
+    });
+
     const initializeApp = async () => {
       try {
-        // Initialize app state and database
+        // Check authentication first
+        await checkAuth();
+        
+        // Initialize app state (this handles preferences loading if authenticated)
         await initialize();
-        await loadMedications();
+        
+        // Only load medications if authenticated
+        if (isAuthenticated) {
+          await loadMedications();
+        }
 
         // Request notification permissions
         await notificationService.requestPermissions();
@@ -54,12 +75,18 @@ export default function RootLayout() {
     initializeApp();
   }, [fontsLoaded]);
 
-  // Wait for initialization before routing
+  // Handle routing based on authentication and onboarding
   useEffect(() => {
-    if (isInitialized && !hasCompletedOnboarding) {
+    if (!isInitialized) return;
+    console.log(111111, isAuthenticated, hasCompletedOnboarding);
+    if (!isAuthenticated) {
+      router.replace('/auth/login');
+    } else if (!hasCompletedOnboarding) {
       router.replace('/onboarding');
+    } else {
+      router.replace('/(tabs)');
     }
-  }, [isInitialized, hasCompletedOnboarding]);
+  }, [isInitialized, isAuthenticated]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -75,6 +102,20 @@ export default function RootLayout() {
         <Stack.Screen 
           name="(tabs)" 
           options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="auth/login" 
+          options={{ 
+            headerShown: false,
+            gestureEnabled: false,
+          }} 
+        />
+        <Stack.Screen 
+          name="auth/register" 
+          options={{ 
+            headerShown: false,
+            gestureEnabled: false,
+          }} 
         />
         <Stack.Screen 
           name="onboarding" 

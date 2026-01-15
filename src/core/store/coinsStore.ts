@@ -2,6 +2,7 @@ import { UserCoins } from '@/src/core/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { coinsApi } from '../api/coins';
 
 interface CoinsState extends UserCoins {
   loadCoins: () => Promise<void>;
@@ -21,40 +22,29 @@ export const useCoinsStore = create<CoinsState>()(
       loadCoins: async () => {
         set({ isLoading: true });
         try {
-          // In a real app, this would fetch from an API
-          // For now, coins are persisted via zustand persist middleware
-          set({ isLoading: false });
-        } catch (error) {
+          const coins = await coinsApi.get();
+          set({ ...coins, isLoading: false });
+        } catch (error: any) {
           console.error('Error loading coins:', error);
+          // Don't reset coins on network error, keep existing values
           set({ isLoading: false });
         }
       },
 
       addCoins: async (amount: number) => {
-        const currentBalance = get().balance;
-        const currentEarned = get().earned;
-        
-        set({
-          balance: currentBalance + amount,
-          earned: currentEarned + amount,
-        });
+        const coins = await coinsApi.add(amount);
+        set({ ...coins });
       },
 
       spendCoins: async (amount: number) => {
-        const currentBalance = get().balance;
-        
-        if (currentBalance < amount) {
-          return false; // Not enough coins
+        try {
+          const coins = await coinsApi.spend(amount);
+          set({ ...coins });
+          return true;
+        } catch (error) {
+          console.error('Error spending coins:', error);
+          return false;
         }
-        
-        const currentSpent = get().spent;
-        
-        set({
-          balance: currentBalance - amount,
-          spent: currentSpent + amount,
-        });
-        
-        return true;
       },
     }),
     {

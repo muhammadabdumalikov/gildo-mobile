@@ -1,4 +1,5 @@
 import { useAppStore } from '@/src/core/store';
+import { useAuthStore } from '@/src/core/store/authStore';
 import {
   AnimatedHeader,
   Colors,
@@ -9,7 +10,7 @@ import {
 } from '@/src/features/shared/components';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
@@ -20,6 +21,7 @@ export default function ProfileScreen() {
   // Explicitly subscribe to store values to ensure re-renders
   const userName = useAppStore((state) => state.userName);
   const profileImageUri = useAppStore((state) => state.profileImageUri);
+  const { logout } = useAuthStore();
   const scrollY = useSharedValue(0);
   const insets = useSafeAreaInsets();
 
@@ -75,6 +77,32 @@ export default function ProfileScreen() {
     // TODO: Navigate to about us
     console.log('About Us');
   };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/auth/login');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
   return (
     <View style={styles.container}>
       <AnimatedHeader title="Profile Settings" scrollY={scrollY} showBottomBorder blurHeader={true} />
@@ -102,7 +130,7 @@ export default function ProfileScreen() {
               />
               
               <View style={styles.profileTextContainer}>
-                <Text style={styles.profileName}>Hello, {displayName}</Text>
+                <Text style={styles.profileName}>Hello, {displayName.split(' ')[0]}</Text>
                 <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7}>
                   <Text style={styles.editProfileLink}>Edit Profile</Text>
                 </TouchableOpacity>
@@ -171,6 +199,19 @@ export default function ProfileScreen() {
             title="About Us"
             subtitle="Learn more about the app and it's version details."
             onPress={handleAboutUs}
+          />
+        </View>
+
+        {/* Sign Out Section - Bottom */}
+        <View style={styles.signOutSection}>
+          <SettingsItem
+            icon="logout"
+            title="Sign Out"
+            subtitle="Sign out of your account"
+            onPress={handleLogout}
+            titleColor={Colors.pillRed}
+            iconColor={Colors.pillRed}
+            iconLibrary="MaterialCommunityIcons"
           />
         </View>
 
@@ -246,6 +287,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_600SemiBold',
     fontWeight: '600',
     color: Colors.pillBlue,
+  },
+  signOutSection: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   bottomPadding: {
     height: 100,

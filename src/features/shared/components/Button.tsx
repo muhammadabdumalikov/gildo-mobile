@@ -119,13 +119,13 @@ export const Button: React.FC<ButtonProps> = ({
     const translateX = interpolate(
       isPressed.value,
       [0, 1],
-      [-4, 0],
+      [-2, 0],
       'clamp'
     );
     const translateY = interpolate(
       isPressed.value,
       [0, 1],
-      [-4, 0],
+      [-2, 0],
       'clamp'
     );
     
@@ -236,10 +236,10 @@ const styles = StyleSheet.create({
   },
   shadowBox: {
     position: 'absolute',
-    top: 4,
-    left: 4,
-    right: -4,
-    bottom: -4,
+    top: 2,
+    left: 2,
+    right: -2,
+    bottom: -2,
     backgroundColor: Colors.inputBorder, // Shadow color matching input style
     borderRadius: 5,
     zIndex: 0,

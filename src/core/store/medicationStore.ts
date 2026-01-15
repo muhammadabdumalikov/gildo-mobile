@@ -1,7 +1,8 @@
 import { notificationService } from '@/src/core/notifications';
-import { medicationRepository, scheduleRepository } from '@/src/features/medications/repositories';
 import { create } from 'zustand';
 import { Medication, MedicationSchedule, MedicationWithSchedules } from '../types';
+import { medicationsApi, CreateMedicationRequest, UpdateMedicationRequest } from '../api/medications';
+import { generateId } from '../utils/generateId';
 
 interface MedicationState {
   medications: MedicationWithSchedules[];
@@ -26,30 +27,41 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
   loadMedications: async () => {
     set({ isLoading: true, error: null });
     try {
-      const medications = await medicationRepository.getAllWithSchedules();
+      const medications = await medicationsApi.getAll();
       set({ medications, isLoading: false });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading medications:', error);
-      set({ error: 'Failed to load medications', isLoading: false });
+      // Set error message but don't clear existing medications
+      const errorMessage = error.isNetworkError 
+        ? 'Cannot connect to server. Check your connection and API URL.'
+        : 'Failed to load medications';
+      set({ error: errorMessage, isLoading: false });
     }
   },
 
   addMedication: async (medication: Medication, schedules: MedicationSchedule[]) => {
     set({ isLoading: true, error: null });
     try {
-      // Save medication to database
-      await medicationRepository.create(medication);
+      // Prepare API request
+      const createRequest: CreateMedicationRequest = {
+        name: medication.name,
+        dosage: medication.dosage,
+        pillColor: medication.pillColor,
+        pillShape: medication.pillShape,
+        quantity: medication.quantity,
+        timing: medication.timing,
+        assignedTo: medication.assignedTo,
+        schedules: schedules.map((s) => ({
+          time: s.time,
+          daysOfWeek: s.daysOfWeek,
+          isActive: s.isActive,
+        })),
+      };
 
-      // Save schedules
-      for (const schedule of schedules) {
-        await scheduleRepository.create(schedule);
-      }
+      // Create medication via API
+      const medicationWithSchedules = await medicationsApi.create(createRequest);
 
       // Schedule notifications
-      const medicationWithSchedules: MedicationWithSchedules = {
-        ...medication,
-        schedules,
-      };
       await notificationService.scheduleMedicationNotifications(medicationWithSchedules);
 
       // Reload medications
@@ -64,20 +76,39 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
   updateMedication: async (medication: Medication, schedules: MedicationSchedule[]) => {
     set({ isLoading: true, error: null });
     try {
-      // Update medication in database
-      await medicationRepository.update(medication);
+      // Update medication via API
+      const updateRequest: UpdateMedicationRequest = {
+        name: medication.name,
+        dosage: medication.dosage,
+        pillColor: medication.pillColor,
+        pillShape: medication.pillShape,
+        quantity: medication.quantity,
+        timing: medication.timing,
+        assignedTo: medication.assignedTo,
+      };
 
-      // Delete old schedules and create new ones
-      await scheduleRepository.deleteByMedicationId(medication.id);
-      for (const schedule of schedules) {
-        await scheduleRepository.create(schedule);
+      // Update medication
+      await medicationsApi.update(medication.id, updateRequest);
+
+      // Get current schedules and delete old ones, then create new ones
+      const currentSchedules = await medicationsApi.getSchedules(medication.id);
+      for (const schedule of currentSchedules) {
+        await medicationsApi.deleteSchedule(schedule.id);
       }
 
+      // Create new schedules
+      for (const schedule of schedules) {
+        await medicationsApi.createSchedule(medication.id, {
+          time: schedule.time,
+          daysOfWeek: schedule.daysOfWeek,
+          isActive: schedule.isActive,
+        });
+      }
+
+      // Get updated medication with schedules
+      const medicationWithSchedules = await medicationsApi.getById(medication.id);
+
       // Reschedule notifications
-      const medicationWithSchedules: MedicationWithSchedules = {
-        ...medication,
-        schedules,
-      };
       await notificationService.rescheduleMedicationNotifications(medicationWithSchedules);
 
       // Reload medications
@@ -95,8 +126,8 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
       // Cancel notifications
       await notificationService.cancelMedicationNotifications(id);
 
-      // Delete from database (cascades to schedules)
-      await medicationRepository.delete(id);
+      // Delete via API
+      await medicationsApi.delete(id);
 
       // Reload medications
       await get().loadMedications();
@@ -114,7 +145,8 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
   toggleSchedule: async (scheduleId: string) => {
     set({ isLoading: true, error: null });
     try {
-      await scheduleRepository.toggleActive(scheduleId);
+      // Toggle schedule via API
+      await medicationsApi.toggleSchedule(scheduleId);
 
       // Reload medications and reschedule notifications
       await get().loadMedications();

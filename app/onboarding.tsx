@@ -8,7 +8,7 @@ import { useAppStore } from '@/src/core/store';
 export default function OnboardingScreen() {
   const [name, setName] = useState('');
   const { setUserName, completeOnboarding } = useAppStore();
-
+  
   const handleContinue = async () => {
     try {
       if (name.trim()) {

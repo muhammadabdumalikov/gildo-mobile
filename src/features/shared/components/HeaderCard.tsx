@@ -28,7 +28,7 @@ export const HeaderCard: React.FC<HeaderCardProps> = ({
         
         <View style={styles.textContainer}>
           <Text style={styles.greeting}>Hello,</Text>
-          <Text style={styles.userName}>{displayName}</Text>
+          <Text style={styles.userName}>{displayName.split(' ')[0]}</Text>
         </View>
       </View>
 

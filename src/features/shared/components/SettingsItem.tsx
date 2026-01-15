@@ -1,4 +1,5 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { IconLibrary } from '@/components/ui/icon-symbol';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BorderRadius, Colors, Spacing, Typography } from './theme';
@@ -8,6 +9,9 @@ interface SettingsItemProps {
   title: string;
   subtitle: string;
   onPress?: () => void;
+  titleColor?: string;
+  iconColor?: string;
+  iconLibrary?: IconLibrary;
 }
 
 export const SettingsItem: React.FC<SettingsItemProps> = ({
@@ -15,6 +19,9 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
   title,
   subtitle,
   onPress,
+  titleColor,
+  iconColor,
+  iconLibrary,
 }) => {
   return (
     <View style={styles.containerWrapper}>
@@ -25,10 +32,17 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
         activeOpacity={0.7}
       >
         <View style={styles.iconContainer}>
-          <IconSymbol name={icon as any} size={24} color={Colors.textPrimary} />
+          <IconSymbol 
+            name={icon as any} 
+            size={24} 
+            color={iconColor || Colors.textPrimary}
+            library={iconLibrary}
+          />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, titleColor && { color: titleColor }]}>
+            {title}
+          </Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
         <View style={styles.arrowContainer}>

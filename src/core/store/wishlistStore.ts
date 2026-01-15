@@ -1,8 +1,8 @@
 import { WishlistItem } from '@/src/core/types';
-import { generateId } from '@/src/core/utils/generateId';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { wishlistApi, CreateWishlistItemRequest, UpdateWishlistItemRequest } from '../api/wishlist';
 
 interface WishlistState {
   wishlistItems: WishlistItem[];
@@ -24,22 +24,24 @@ export const useWishlistStore = create<WishlistState>()(
       loadWishlistItems: async () => {
         set({ isLoading: true });
         try {
-          // In a real app, this would fetch from an API
-          // For now, items are persisted via zustand persist middleware
-          set({ isLoading: false });
-        } catch (error) {
+          const items = await wishlistApi.getAll();
+          set({ wishlistItems: items, isLoading: false });
+        } catch (error: any) {
           console.error('Error loading wishlist items:', error);
+          // Don't clear existing items on network error
           set({ isLoading: false });
         }
       },
 
       addWishlistItem: async (itemData) => {
-        const newItem: WishlistItem = {
-          ...itemData,
-          id: generateId(),
-          isRedeemed: false,
+        const createRequest: CreateWishlistItemRequest = {
+          name: itemData.name,
+          description: itemData.description,
+          referenceLink: itemData.referenceLink,
+          imageUrl: itemData.imageUrl,
         };
 
+        const newItem = await wishlistApi.create(createRequest);
         set((state) => ({
           wishlistItems: [...state.wishlistItems, newItem],
         }));
@@ -48,24 +50,31 @@ export const useWishlistStore = create<WishlistState>()(
       },
 
       updateWishlistItem: async (id, updates) => {
+        const updateRequest: UpdateWishlistItemRequest = {
+          name: updates.name,
+          description: updates.description,
+          referenceLink: updates.referenceLink,
+          imageUrl: updates.imageUrl,
+          isRedeemed: updates.isRedeemed,
+        };
+
+        const updated = await wishlistApi.update(id, updateRequest);
         set((state) => ({
-          wishlistItems: state.wishlistItems.map((item) =>
-            item.id === id ? { ...item, ...updates } : item
-          ),
+          wishlistItems: state.wishlistItems.map((item) => (item.id === id ? updated : item)),
         }));
       },
 
       deleteWishlistItem: async (id) => {
+        await wishlistApi.delete(id);
         set((state) => ({
           wishlistItems: state.wishlistItems.filter((item) => item.id !== id),
         }));
       },
 
       redeemWishlistItem: async (id) => {
+        const updated = await wishlistApi.redeem(id);
         set((state) => ({
-          wishlistItems: state.wishlistItems.map((item) =>
-            item.id === id ? { ...item, isRedeemed: true } : item
-          ),
+          wishlistItems: state.wishlistItems.map((item) => (item.id === id ? updated : item)),
         }));
       },
 

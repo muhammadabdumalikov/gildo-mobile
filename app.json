@@ -16,9 +16,20 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"],
-        "NSUserNotificationUsageDescription": "Yolkk needs notification permission to send you medication reminders."
-      }
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
+        "NSUserNotificationUsageDescription": "Yolkk needs notification permission to send you medication reminders.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.196509978424-qlepjsc6e14rd756iig8t4qmf1hi12li"
+            ]
+          }
+        ]
+      },
+      "bundleIdentifier": "com.muhammad443.gildoexpo"
     },
     "android": {
       "adaptiveIcon": {
@@ -45,8 +56,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#FFA726",
-          "sounds": ["./assets/notification.wav"]
+          "color": "#FFA726"
         }
       ],
       [
@@ -60,11 +70,23 @@
             "backgroundColor": "#1A1A1A"
           }
         }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.196509978424-qlepjsc6e14rd756iig8t4qmf1hi12li"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "478d63c6-cbf6-4921-82d7-ebae11c6f511"
+      }
     }
   }
 }

@@ -96,10 +96,10 @@ const styles = StyleSheet.create({
   },
   shadowBox: {
     position: 'absolute',
-    top: 4,
-    left: 4,
-    right: -4,
-    bottom: -4,
+    top: 2,
+    left: 2,
+    right: -2,
+    bottom: -2,
     backgroundColor: Colors.inputBorder, // main-color for shadow
     borderRadius: 5,
     zIndex: 0,

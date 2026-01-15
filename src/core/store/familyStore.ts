@@ -1,8 +1,8 @@
 import { FamilyMember } from '@/src/core/types';
-import { generateId } from '@/src/core/utils/generateId';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { familyApi, CreateFamilyMemberRequest, UpdateFamilyMemberRequest } from '../api/family';
 
 interface FamilyState {
   familyMembers: FamilyMember[];
@@ -23,54 +23,26 @@ export const useFamilyStore = create<FamilyState>()(
       loadFamilyMembers: async () => {
         set({ isLoading: true });
         try {
-          // In a real app, this would fetch from an API
-          // For now, members are persisted via zustand persist middleware
-          const currentMembers = get().familyMembers;
-          
-          // Add mock data if list is empty (for development/testing)
-          if (currentMembers.length === 0) {
-            const mockMembers: FamilyMember[] = [
-              {
-                id: generateId(),
-                name: 'Sarah Johnson',
-                relationship: 'Mother',
-                medications: ['med_1', 'med_2'],
-              },
-              {
-                id: generateId(),
-                name: 'Michael Johnson',
-                relationship: 'Father',
-                medications: ['med_3'],
-              },
-              {
-                id: generateId(),
-                name: 'Emma Johnson',
-                relationship: 'Sister',
-                medications: [],
-              },
-              {
-                id: generateId(),
-                name: 'David Johnson',
-                relationship: 'Brother',
-                medications: ['med_4', 'med_5', 'med_6'],
-              },
-            ];
-            set({ familyMembers: mockMembers });
-          }
-          
-          set({ isLoading: false });
-        } catch (error) {
+          const members = await familyApi.getAll();
+          set({ familyMembers: members, isLoading: false });
+        } catch (error: any) {
           console.error('Error loading family members:', error);
+          // Don't clear existing members on network error
           set({ isLoading: false });
         }
       },
 
       addFamilyMember: async (memberData) => {
-        const newMember: FamilyMember = {
-          ...memberData,
-          id: generateId(),
+        const createRequest: CreateFamilyMemberRequest = {
+          name: memberData.name,
+          relationship: memberData.relationship,
+          relationshipIcon: memberData.relationshipIcon,
+          dateOfBirth: memberData.dateOfBirth,
+          profileImageUri: memberData.profileImageUri,
+          medications: memberData.medications,
         };
 
+        const newMember = await familyApi.create(createRequest);
         set((state) => ({
           familyMembers: [...state.familyMembers, newMember],
         }));
@@ -79,14 +51,23 @@ export const useFamilyStore = create<FamilyState>()(
       },
 
       updateFamilyMember: async (id, updates) => {
+        const updateRequest: UpdateFamilyMemberRequest = {
+          name: updates.name,
+          relationship: updates.relationship,
+          relationshipIcon: updates.relationshipIcon,
+          dateOfBirth: updates.dateOfBirth,
+          profileImageUri: updates.profileImageUri,
+          medications: updates.medications,
+        };
+
+        const updated = await familyApi.update(id, updateRequest);
         set((state) => ({
-          familyMembers: state.familyMembers.map((member) =>
-            member.id === id ? { ...member, ...updates } : member
-          ),
+          familyMembers: state.familyMembers.map((member) => (member.id === id ? updated : member)),
         }));
       },
 
       deleteFamilyMember: async (id) => {
+        await familyApi.delete(id);
         set((state) => ({
           familyMembers: state.familyMembers.filter((member) => member.id !== id),
         }));
