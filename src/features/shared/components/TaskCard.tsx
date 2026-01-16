@@ -95,20 +95,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
           <View style={styles.content}>
             <Text
-            style={[
-              styles.title,
-              task.isCompleted && styles.titleCompleted,
-            ]}
-            numberOfLines={1}
-          >
-            {task.title}
-          </Text>
+              style={[
+                styles.title,
+                task.isCompleted && styles.titleCompleted,
+              ]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {task.title}
+            </Text>
           {task.description && (
             <Text
               style={[
                 styles.description,
               ]}
-              numberOfLines={2}
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {task.description}
             </Text>
@@ -225,9 +227,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               name="coins"
               library="FontAwesome6"
               size={16}
-              color={Colors.primary}
+              color={Colors.cardBackground}
             />
-            <View style={{ width: 6 }} />
             <Text style={styles.coinText}>
               {task.coinReward}
             </Text>
@@ -264,6 +265,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 1,
     overflow: 'hidden',
+    minHeight: 120,
   },
   cardCompleted: {
     backgroundColor: '#F5FFF5', // Slight green tint
@@ -274,10 +276,12 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
+    zIndex: 2, // Ensure it's above other content
   },
   contentWrapper: {
     flex: 1,
     flexDirection: 'row',
+    minWidth: 0, // Allow flex to shrink properly
   },
   statusIconContainer: {
     marginRight: Spacing.md,
@@ -294,6 +298,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    minWidth: 0, // Allow text to truncate properly
   },
   doneButtonContainer: {
     position: 'relative',
@@ -364,17 +369,19 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
     borderColor: '#FFE082', // Light orange border
+    maxWidth: '100%', // Prevent overflow
   },
   assignerText: {
     ...Typography.caption,
     fontSize: 11,
     fontFamily: 'Montserrat_600SemiBold',
     color: Colors.primary,
+    flexShrink: 1, // Allow text to shrink if needed
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     marginTop: Spacing.xs,
     flexWrap: 'wrap',
   },
@@ -383,6 +390,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     flexWrap: 'wrap',
+    minWidth: 0, // Allow proper wrapping
   },
   rightSection: {
     flexDirection: 'column',
@@ -390,6 +398,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginLeft: Spacing.md,
     alignSelf: 'stretch',
+    minWidth: 80, // Ensure buttons don't get squished
   },
   dateContainer: {
     flexDirection: 'row',
@@ -400,6 +409,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
     borderColor: Colors.border,
+    maxWidth: '100%', // Prevent overflow
   },
   dateContainerOverdue: {
     backgroundColor: '#FFEBEE',
@@ -410,6 +420,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Montserrat_500Medium',
     color: Colors.textSecondary,
+    flexShrink: 1, // Allow text to shrink if needed
   },
   dateTextOverdue: {
     color: Colors.pillRed,
@@ -418,20 +429,23 @@ const styles = StyleSheet.create({
   coinContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: Spacing.lg,
-    backgroundColor: '#FFF8E1',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.primary,
+    paddingVertical: 6,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.round,
     borderWidth: 2,
-    borderColor: '#FFE082',
+    borderColor: Colors.inputBorder,
+    minWidth: 70,
   },
   coinText: {
     ...Typography.caption,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     fontFamily: 'Montserrat_700Bold',
-    color: Colors.primary,
+    color: Colors.cardBackground,
+    marginLeft: Spacing.xs,
   },
   completedBadgeContainer: {
     marginLeft: Spacing.md,

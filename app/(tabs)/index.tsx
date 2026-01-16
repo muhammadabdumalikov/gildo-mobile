@@ -1,14 +1,18 @@
 import { useAppStore, useCoinsStore, useMedicationStore, useTaskStore } from '@/src/core/store';
 import {
-  CategoryCard,
+  BalanceCard,
   Colors,
-  HeaderCard,
+  CompactTaskCard,
+  PillCard,
+  ProfileImage,
   Spacing,
 } from '@/src/features/shared/components';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { format } from 'date-fns';
 
 
 export default function HomeScreen() {
@@ -52,14 +56,33 @@ export default function HomeScreen() {
     return weekDates.find(d => d.dateString === selectedDateString) || weekDates.find(d => d.isToday)!;
   }, [weekDates, selectedDateString]);
 
-  // Filter medications for selected day
+  // Filter medications for selected day and group by time
   const medicationsForDay = useMemo(() => {
     const dayOfWeek = selectedDayInfo.dayOfWeek;
-    return medications.filter(medication => 
+    const filtered = medications.filter(medication => 
       medication.schedules.some(schedule => 
         schedule.isActive && schedule.daysOfWeek.includes(dayOfWeek)
       )
     );
+    
+    // Flatten to show each schedule as a separate item
+    const medicationItems: Array<{ medication: typeof medications[0]; schedule: typeof medications[0]['schedules'][0] }> = [];
+    filtered.forEach(medication => {
+      medication.schedules
+        .filter(schedule => schedule.isActive && schedule.daysOfWeek.includes(dayOfWeek))
+        .forEach(schedule => {
+          medicationItems.push({ medication, schedule });
+        });
+    });
+    
+    // Sort by time
+    medicationItems.sort((a, b) => {
+      const timeA = a.schedule.time.split(':').map(Number);
+      const timeB = b.schedule.time.split(':').map(Number);
+      return timeA[0] * 60 + timeA[1] - (timeB[0] * 60 + timeB[1]);
+    });
+    
+    return medicationItems;
   }, [medications, selectedDayInfo]);
 
   // Filter tasks for selected day
@@ -88,23 +111,80 @@ export default function HomeScreen() {
   // Count for selected day
   const medicationsCount = medicationsForDay.length;
   const tasksCount = tasksForDay.length;
-
-  const handlePillsPress = () => {
-    router.push('/pills');
-  };
+  
+  // Get morning medications (before 12 PM)
+  const morningMeds = useMemo(() => {
+    return medicationsForDay.filter(({ schedule }) => {
+      const [hours] = schedule.time.split(':').map(Number);
+      return hours < 12;
+    }).slice(0, 2); // Show max 2
+  }, [medicationsForDay]);
+  
+  // Get top tasks (incomplete, sorted by due date)
+  const topTasks = useMemo(() => {
+    return tasksForDay
+      .filter(task => !task.isCompleted)
+      .slice(0, 2); // Show max 2
+  }, [tasksForDay]);
+  
+  // Format day name and date
+  const dayName = useMemo(() => {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return dayNames[selectedDayInfo.dayOfWeek];
+  }, [selectedDayInfo]);
+  
+  const formattedDate = useMemo(() => {
+    return format(selectedDayInfo.fullDate, 'MMM dd');
+  }, [selectedDayInfo]);
+  
+  // Calculate completed medications (mock - you'll need to track this)
+  const completedMedsCount = 0; // TODO: Track completed medications
+  const medsProgress = medicationsCount > 0 ? `${completedMedsCount}/${medicationsCount} Done` : '';
 
   const handleTasksPress = () => {
     router.push('/tasks');
   };
 
+  const handleMedicationPress = (medicationId: string) => {
+    router.push(`/medication/${medicationId}` as any);
+  };
+  
+  const handleTaskPress = (taskId: string) => {
+    router.push(`/task/${taskId}` as any);
+  };
+
   return (
     <View style={styles.container}>
-      <View style={[styles.content, { paddingTop: Spacing.lg + insets.top }]}>
-        <HeaderCard 
-          userName={userName} 
-          profileImageUri={profileImageUri} 
-          coinBalance={coinBalance}
-        />
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={[styles.content, { paddingTop: Spacing.lg + insets.top }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* User Profile Header */}
+        <View style={styles.profileHeader}>
+          <View style={styles.profileLeft}>
+            <ProfileImage
+              imageUri={profileImageUri}
+              userName={userName}
+              size={56}
+            />
+            <View style={styles.profileText}>
+              <Text style={styles.dayText}>{userName.split(' ')[0]}'s Day</Text>
+              <Text style={styles.dateText}>{dayName}, {formattedDate}</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.notificationButton}>
+            <IconSymbol
+              name="bell"
+              library="FontAwesome6"
+              size={24}
+              color={Colors.textPrimary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Total Balance Card */}
+        <BalanceCard balance={coinBalance} />
 
         {/* Week Calendar */}
         <ScrollView 
@@ -112,6 +192,7 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           style={styles.weekCalendar}
           contentContainerStyle={styles.weekCalendarContent}
+          nestedScrollEnabled
         >
           {weekDates.map((item, index) => (
             <TouchableOpacity
@@ -145,43 +226,60 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* Cards List - 1 per row - Only show cards with items */}
-        <View style={styles.cardsContainer}>
-          {medicationsCount > 0 && (
-            <View style={styles.cardItem}>
-              <CategoryCard
-                title="Pills"
-                count={medicationsCount}
-                iconName="pills"
-                iconLibrary="FontAwesome6"
-                iconColor={Colors.pillBlue}
-                onPress={handlePillsPress}
-              />
+        {/* Morning Meds Section */}
+        {morningMeds.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Morning Meds</Text>
+              {medsProgress && (
+                <Text style={styles.sectionProgress}>{medsProgress}</Text>
+              )}
             </View>
-          )}
+            <View style={styles.medicationsList}>
+              {morningMeds.map(({ medication, schedule }, index) => (
+                <View key={`${medication.id}-${schedule.id}-${index}`} style={styles.medicationItem}>
+                  <PillCard
+                    medication={medication}
+                    scheduleTime={schedule.time}
+                    onPress={() => handleMedicationPress(medication.id)}
+                  />
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
-          {tasksCount > 0 && (
-            <View style={styles.cardItem}>
-              <CategoryCard
-                title="Tasks"
-                count={tasksCount}
-                iconName="list-check"
-                iconLibrary="FontAwesome6"
-                iconColor={Colors.pillGreen}
-                onPress={handleTasksPress}
-              />
+        {/* Top Chores Section */}
+        {topTasks.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Top Chores</Text>
+              <TouchableOpacity onPress={handleTasksPress}>
+                <Text style={styles.viewAllText}>View all</Text>
+              </TouchableOpacity>
             </View>
-          )}
+            <View style={styles.tasksContainer}>
+              {topTasks.map((task) => (
+                <View key={task.id} style={styles.taskCardWrapper}>
+                  <CompactTaskCard
+                    task={task}
+                    onPress={() => handleTaskPress(task.id)}
+                  />
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
-          {medicationsCount === 0 && tasksCount === 0 && (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                No items scheduled for this day
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
+        {/* Empty State */}
+        {medicationsCount === 0 && tasksCount === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>
+              No items scheduled for this day
+            </Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -190,13 +288,48 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingBottom: 100,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     paddingHorizontal: Spacing.lg,
+    paddingBottom: 150,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.xs,
+  },
+  profileLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  profileText: {
+    marginLeft: Spacing.md,
+    flex: 1,
+  },
+  dayText: {
+    fontSize: 20,
+    fontWeight: '700',
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  dateText: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_400Regular',
+    color: Colors.textSecondary,
+  },
+  notificationButton: {
+    padding: Spacing.sm,
   },
   weekCalendar: {
     marginHorizontal: -Spacing.lg,
+    marginBottom: Spacing.md,
   },
   weekCalendarContent: {
     height: 70,
@@ -250,12 +383,47 @@ const styles = StyleSheet.create({
   dateNumberActive: {
     color: Colors.cardBackground,
   },
-  cardsContainer: {
+  section: {
     marginTop: Spacing.xl,
   },
-  cardItem: {
-    height: 140,
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.xs,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.textPrimary,
+  },
+  sectionProgress: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_500Medium',
+    color: Colors.textSecondary,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: Colors.primary,
+  },
+  medicationsList: {
+    gap: Spacing.sm,
+  },
+  medicationItem: {
+    marginBottom: Spacing.sm,
+  },
+  tasksContainer: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.xs,
+  },
+  taskCardWrapper: {
+    flex: 1,
+    minWidth: 160,
+    maxWidth: 180,
   },
   emptyState: {
     alignItems: 'center',
