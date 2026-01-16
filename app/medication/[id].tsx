@@ -206,7 +206,31 @@ export default function MedicationFormScreen() {
       };
 
       if (isNew) {
-        await addMedication(medication, [schedule]);
+        const result = await addMedication(medication, [schedule]);
+        
+        // Check if subscription limit was reached
+        if (!result.success && result.error === 'SUBSCRIPTION_LIMIT_REACHED') {
+          setLoading(false);
+          showAlert({
+            variant: 'alert',
+            title: "Medication Limit Reached",
+            message: "You have reached the maximum number of medications for your plan. Upgrade to premium for unlimited medications.",
+            confirmText: "Upgrade",
+            cancelText: "OK",
+            showCancel: true,
+            onConfirm: () => {
+              router.push('/subscription/plans' as any);
+            },
+            onCancel: () => {
+              // Just close the alert
+            },
+          });
+          return;
+        }
+        
+        if (!result.success) {
+          throw new Error('Failed to add medication');
+        }
       } else {
         await updateMedication(medication, [schedule]);
       }

@@ -1,17 +1,22 @@
 import { notificationService } from '@/src/core/notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { Medication, MedicationSchedule, MedicationWithSchedules } from '../types';
 import { medicationsApi, CreateMedicationRequest, UpdateMedicationRequest } from '../api/medications';
-import { generateId } from '../utils/generateId';
+
+// Cache duration: 60 seconds (medications change frequently)
+const CACHE_DURATION = 60000;
 
 interface MedicationState {
   medications: MedicationWithSchedules[];
   isLoading: boolean;
   error: string | null;
+  lastLoadedAt?: number; // Timestamp of last successful load
   
   // Actions
-  loadMedications: () => Promise<void>;
-  addMedication: (medication: Medication, schedules: MedicationSchedule[]) => Promise<void>;
+  loadMedications: (force?: boolean) => Promise<void>;
+  addMedication: (medication: Medication, schedules: MedicationSchedule[]) => Promise<{ success: boolean; error?: 'SUBSCRIPTION_LIMIT_REACHED' | 'OTHER' }>;
   updateMedication: (medication: Medication, schedules: MedicationSchedule[]) => Promise<void>;
   deleteMedication: (id: string) => Promise<void>;
   getMedicationById: (id: string) => MedicationWithSchedules | undefined;
@@ -19,16 +24,31 @@ interface MedicationState {
   refreshMedications: () => Promise<void>;
 }
 
-export const useMedicationStore = create<MedicationState>((set, get) => ({
-  medications: [],
-  isLoading: false,
-  error: null,
+export const useMedicationStore = create<MedicationState>()(
+  persist(
+    (set, get) => ({
+      medications: [],
+      isLoading: false,
+      error: null,
+      lastLoadedAt: undefined,
 
-  loadMedications: async () => {
+  loadMedications: async (force = false) => {
+    const state = get();
+    const now = Date.now();
+    
+    // Use cache if recent and not forced
+    if (!force && state.lastLoadedAt && (now - state.lastLoadedAt) < CACHE_DURATION) {
+      return Promise.resolve();
+    }
+    
     set({ isLoading: true, error: null });
     try {
       const medications = await medicationsApi.getAll();
-      set({ medications, isLoading: false });
+      set({ medications, isLoading: false, lastLoadedAt: now });
+      
+      // Update subscription usage count
+      const { useSubscriptionStore } = await import('./subscriptionStore');
+      useSubscriptionStore.getState().setCurrentUsage({ medications: medications.length });
     } catch (error: any) {
       console.error('Error loading medications:', error);
       // Set error message but don't clear existing medications
@@ -42,6 +62,28 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
   addMedication: async (medication: Medication, schedules: MedicationSchedule[]) => {
     set({ isLoading: true, error: null });
     try {
+      // Check subscription limits before adding - use actual medications count
+      const { useSubscriptionStore } = await import('./subscriptionStore');
+      const subscriptionStore = useSubscriptionStore.getState();
+      const currentMedications = get().medications;
+      const currentCount = currentMedications.length;
+      
+      // Ensure subscription is loaded
+      if (!subscriptionStore.limits || !subscriptionStore.plan) {
+        console.warn('Subscription not loaded, loading now...');
+        await subscriptionStore.loadSubscription();
+      }
+      
+      // Premium users have unlimited access
+      if (subscriptionStore.plan !== 'premium') {
+        // Check against freemium limits (default to 3 if limits not set)
+        const limit = subscriptionStore.limits?.medications ?? 3;
+        if (currentCount >= limit) {
+          set({ isLoading: false, error: 'Medication limit reached. Upgrade to premium for unlimited medications.' });
+          return { success: false, error: 'SUBSCRIPTION_LIMIT_REACHED' };
+        }
+      }
+
       // Prepare API request
       const createRequest: CreateMedicationRequest = {
         name: medication.name,
@@ -64,12 +106,25 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
       // Schedule notifications
       await notificationService.scheduleMedicationNotifications(medicationWithSchedules);
 
-      // Reload medications
+      // Reload medications (this also updates subscription usage count)
       await get().loadMedications();
-    } catch (error) {
-      console.error('Error adding medication:', error);
-      set({ error: 'Failed to add medication', isLoading: false });
-      throw error;
+      
+      return { success: true };
+    } catch (error: any) {
+      // Check if it's a subscription limit error from backend (expected behavior)
+      if (error?.response?.status === 403 || error?.message?.includes('maximum number of medications')) {
+        // This is expected - don't log as error
+        set({ 
+          error: 'Medication limit reached. Upgrade to premium for unlimited medications.', 
+          isLoading: false 
+        });
+        return { success: false, error: 'SUBSCRIPTION_LIMIT_REACHED' };
+      } else {
+        // Only log unexpected errors
+        console.error('Error adding medication:', error);
+        set({ error: 'Failed to add medication', isLoading: false });
+        return { success: false, error: 'OTHER' };
+      }
     }
   },
 
@@ -167,7 +222,18 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
   },
 
   refreshMedications: async () => {
-    await get().loadMedications();
+    await get().loadMedications(true); // Force refresh, bypass cache
   },
-}));
+    }),
+    {
+      name: 'medication-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      // Persist medications array and cache timestamp, not loading/error states
+      partialize: (state) => ({ 
+        medications: state.medications,
+        lastLoadedAt: state.lastLoadedAt,
+      }),
+    }
+  )
+);
 

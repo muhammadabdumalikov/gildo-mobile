@@ -5,4 +5,5 @@ export * from './wishlistStore';
 export * from './coinsStore';
 export * from './familyStore';
 export * from './notificationStore';
+export * from './subscriptionStore';
 

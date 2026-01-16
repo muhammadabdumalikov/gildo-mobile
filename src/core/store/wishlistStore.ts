@@ -4,15 +4,19 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { wishlistApi, CreateWishlistItemRequest, UpdateWishlistItemRequest } from '../api/wishlist';
 
+// Cache duration: 5 minutes (wishlist items change rarely)
+const CACHE_DURATION = 300000;
+
 interface WishlistState {
   wishlistItems: WishlistItem[];
-  loadWishlistItems: () => Promise<void>;
+  loadWishlistItems: (force?: boolean) => Promise<void>;
   addWishlistItem: (item: Omit<WishlistItem, 'id' | 'isRedeemed'>) => Promise<WishlistItem>;
   updateWishlistItem: (id: string, updates: Partial<WishlistItem>) => Promise<void>;
   deleteWishlistItem: (id: string) => Promise<void>;
   redeemWishlistItem: (id: string) => Promise<void>;
   getWishlistItemById: (id: string) => WishlistItem | undefined;
   isLoading: boolean;
+  lastLoadedAt?: number; // Timestamp of last successful load
 }
 
 export const useWishlistStore = create<WishlistState>()(
@@ -20,12 +24,21 @@ export const useWishlistStore = create<WishlistState>()(
     (set, get) => ({
       wishlistItems: [],
       isLoading: false,
+      lastLoadedAt: undefined,
 
-      loadWishlistItems: async () => {
+      loadWishlistItems: async (force = false) => {
+        const state = get();
+        const now = Date.now();
+        
+        // Use cache if recent and not forced
+        if (!force && state.lastLoadedAt && (now - state.lastLoadedAt) < CACHE_DURATION) {
+          return Promise.resolve();
+        }
+        
         set({ isLoading: true });
         try {
           const items = await wishlistApi.getAll();
-          set({ wishlistItems: items, isLoading: false });
+          set({ wishlistItems: items, isLoading: false, lastLoadedAt: now });
         } catch (error: any) {
           console.error('Error loading wishlist items:', error);
           // Don't clear existing items on network error
@@ -85,6 +98,11 @@ export const useWishlistStore = create<WishlistState>()(
     {
       name: 'wishlist-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      // Persist wishlist items and cache timestamp, not loading state
+      partialize: (state) => ({ 
+        wishlistItems: state.wishlistItems,
+        lastLoadedAt: state.lastLoadedAt,
+      }),
     }
   )
 );

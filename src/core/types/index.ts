@@ -89,3 +89,19 @@ export interface UserCoins {
   spent: number;
 }
 
+export interface Subscription {
+  plan: 'freemium' | 'premium';
+  status: 'active' | 'cancelled' | 'expired' | 'trial';
+  period?: 'monthly' | 'yearly';
+  currentPeriodEnd?: number;
+  limits: {
+    medications: number;
+    tasks: number;
+    familyMembers: number;
+  };
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  appleTransactionId?: string;
+  googlePurchaseToken?: string;
+}
+

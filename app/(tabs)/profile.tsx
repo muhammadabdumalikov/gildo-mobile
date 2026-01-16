@@ -1,21 +1,21 @@
-import { useAppStore } from '@/src/core/store';
-import { useAuthStore } from '@/src/core/store/authStore';
+import { useAppStore } from "@/src/core/store";
+import { useAuthStore } from "@/src/core/store/authStore";
 import {
   AnimatedHeader,
   Colors,
   ProfileImage,
   SettingsItem,
   Spacing,
-  Typography
-} from '@/src/features/shared/components';
-import { router, useFocusEffect } from 'expo-router';
-import React, { useCallback } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+  Typography,
+} from "@/src/features/shared/components";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback } from "react";
+import { StyleSheet, Text, TouchableOpacity, View, Alert } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   // Explicitly subscribe to store values to ensure re-renders
@@ -25,7 +25,7 @@ export default function ProfileScreen() {
   const scrollY = useSharedValue(0);
   const insets = useSafeAreaInsets();
 
-  const displayName = userName || 'there';
+  const displayName = userName || "there";
 
   // Refresh profile data when screen comes into focus
   useFocusEffect(
@@ -42,60 +42,49 @@ export default function ProfileScreen() {
   });
 
   const handleEditProfile = () => {
-    router.push('/profile/edit');
+    router.push("/profile/edit");
   };
 
   const handleFamilyMembers = () => {
-    router.push('/family');
+    router.push("/family");
   };
 
   const handleNotificationSettings = () => {
-    router.push('/notifications');
-  };
-
-  const handleReminderPreferences = () => {
-    // TODO: Navigate to reminder preferences
-    console.log('Reminder Preferences');
+    router.push("/notifications");
   };
 
   const handleLanguage = () => {
     // TODO: Navigate to language settings
-    console.log('Language');
-  };
-
-  const handleAppearance = () => {
-    // TODO: Navigate to appearance settings
-    console.log('Appearance');
+    console.log("Language");
   };
 
   const handlePrivacySecurity = () => {
     // TODO: Navigate to privacy & security
-    console.log('Privacy & Security');
+    console.log("Privacy & Security");
   };
 
-  const handleAboutUs = () => {
-    // TODO: Navigate to about us
-    console.log('About Us');
+  const handleSubscription = () => {
+    router.push("/subscription/plans");
   };
 
   const handleLogout = () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      "Sign Out",
+      "Are you sure you want to sign out?",
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Sign Out',
-          style: 'destructive',
+          text: "Sign Out",
+          style: "destructive",
           onPress: async () => {
             try {
               await logout();
-              router.replace('/auth/login');
+              router.replace("/auth/login");
             } catch (error) {
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
+              Alert.alert("Error", "Failed to sign out. Please try again.");
             }
           },
         },
@@ -105,12 +94,17 @@ export default function ProfileScreen() {
   };
   return (
     <View style={styles.container}>
-      <AnimatedHeader title="Profile Settings" scrollY={scrollY} showBottomBorder blurHeader={true} />
+      <AnimatedHeader
+        title="Profile Settings"
+        scrollY={scrollY}
+        showBottomBorder
+        blurHeader={true}
+      />
       <Animated.ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: 120 + insets.top }, // Account for header max height + safe area
+          { paddingTop: 120 + 10 }, // Account for header max height
         ]}
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
@@ -119,7 +113,7 @@ export default function ProfileScreen() {
         {/* Profile Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Profile</Text>
-          
+
           <View style={styles.profileContainerWrapper}>
             <View style={styles.profileShadowBox} />
             <View style={styles.profileContainer}>
@@ -128,10 +122,15 @@ export default function ProfileScreen() {
                 userName={userName}
                 size={64}
               />
-              
+
               <View style={styles.profileTextContainer}>
-                <Text style={styles.profileName}>Hello, {displayName.split(' ')[0]}</Text>
-                <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7}>
+                <Text style={styles.profileName}>
+                  Hello, {displayName.split(" ")[0]}
+                </Text>
+                <TouchableOpacity
+                  onPress={handleEditProfile}
+                  activeOpacity={0.7}
+                >
                   <Text style={styles.editProfileLink}>Edit Profile</Text>
                 </TouchableOpacity>
               </View>
@@ -155,12 +154,6 @@ export default function ProfileScreen() {
             subtitle="Enable or disable various app notifications."
             onPress={handleNotificationSettings}
           />
-          <SettingsItem
-            icon="speaker.wave.2.fill"
-            title="Reminder Preferences"
-            subtitle="Choose the alert sound for medication reminders."
-            onPress={handleReminderPreferences}
-          />
         </View>
 
         {/* General Section */}
@@ -172,11 +165,16 @@ export default function ProfileScreen() {
             subtitle="Select your preferred app language."
             onPress={handleLanguage}
           />
+        </View>
+
+        {/* Subscription Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Subscription</Text>
           <SettingsItem
-            icon="eye.fill"
-            title="Appearance"
-            subtitle="Select the preffered zoom for the app."
-            onPress={handleAppearance}
+            icon="star.fill"
+            title="Manage Subscription"
+            subtitle="View your plan, usage, and billing."
+            onPress={handleSubscription}
           />
         </View>
 
@@ -189,21 +187,6 @@ export default function ProfileScreen() {
             subtitle="Manage app passwords and security."
             onPress={handlePrivacySecurity}
           />
-        </View>
-
-        {/* About Us Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About Us</Text>
-          <SettingsItem
-            icon="info.circle.fill"
-            title="About Us"
-            subtitle="Learn more about the app and it's version details."
-            onPress={handleAboutUs}
-          />
-        </View>
-
-        {/* Sign Out Section - Bottom */}
-        <View style={styles.signOutSection}>
           <SettingsItem
             icon="logout"
             title="Sign Out"
@@ -241,15 +224,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
+    fontWeight: "600",
+    fontFamily: "Montserrat_600SemiBold",
   },
   profileContainerWrapper: {
-    position: 'relative',
+    position: "relative",
     marginBottom: Spacing.md,
   },
   profileShadowBox: {
-    position: 'absolute',
+    position: "absolute",
     top: 4,
     left: 4,
     right: -4,
@@ -259,52 +242,48 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   profileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Colors.cardBackground,
     borderRadius: 5,
     padding: Spacing.lg,
     borderWidth: 2,
     borderColor: Colors.inputBorder,
-    position: 'relative',
+    position: "relative",
     zIndex: 1,
   },
   profileTextContainer: {
     marginLeft: Spacing.md,
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   profileName: {
     ...Typography.subheader,
     fontSize: 22,
-    fontWeight: '700',
-    fontFamily: 'Montserrat_700Bold',
+    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: Colors.textPrimary,
     marginBottom: 4,
   },
   editProfileLink: {
     fontSize: 14,
-    fontFamily: 'Montserrat_600SemiBold',
-    fontWeight: '600',
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
     color: Colors.pillBlue,
-  },
-  signOutSection: {
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xl,
   },
   bottomPadding: {
     height: 100,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: Spacing.md,
   },
   manageLink: {
     fontSize: 14,
-    fontFamily: 'Montserrat_600SemiBold',
-    fontWeight: '600',
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
     color: Colors.pillBlue,
   },
   familyList: {
@@ -316,23 +295,23 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderWidth: 2,
     borderColor: Colors.inputBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 100,
   },
   emptyFamilyText: {
     ...Typography.title,
     fontSize: 16,
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: "Montserrat_600SemiBold",
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyFamilySubtext: {
     ...Typography.body,
     fontSize: 13,
-    fontFamily: 'Montserrat_400Regular',
+    fontFamily: "Montserrat_400Regular",
     color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

@@ -1,10 +1,10 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Task } from '@/src/core/types';
 import { format } from 'date-fns';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BorderRadius, Colors, Spacing, Typography } from './theme';
-import { useAlertModal } from './useAlertModal';
+import { CubeSpinner } from './CubeSpinner';
 
 interface TaskCardProps {
   task: Task;
@@ -19,7 +19,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onMarkComplete,
   onMarkIncomplete,
 }) => {
-  const { showAlert, AlertModal } = useAlertModal();
+  const [isLoading, setIsLoading] = useState(false);
 
   const dueDateText = task.dueDate
     ? format(new Date(task.dueDate), 'MMM dd, yyyy')
@@ -28,28 +28,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const isOverdue =
     task.dueDate && !task.isCompleted && new Date(task.dueDate).getTime() < Date.now();
 
-  const handleMarkComplete = () => {
-    showAlert({
-      variant: 'success',
-      title: 'Mark as Done?',
-      message: 'Are you sure you want to mark this task as completed?',
-      onConfirm: () => {
-        onMarkComplete();
-      },
-      showCancel: true,
-    });
+  const handleMarkComplete = async () => {
+    setIsLoading(true);
+    try {
+      await onMarkComplete();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleMarkIncomplete = () => {
-    showAlert({
-      variant: 'info',
-      title: 'Mark as Undone?',
-      message: 'Are you sure you want to mark this task as incomplete?',
-      onConfirm: () => {
-        onMarkIncomplete();
-      },
-      showCancel: true,
-    });
+  const handleMarkIncomplete = async () => {
+    setIsLoading(true);
+    try {
+      await onMarkIncomplete();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -176,35 +170,53 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <View style={styles.undoneButtonContainer}>
               <View style={styles.undoneButtonShadowBox} />
               <TouchableOpacity
-                style={styles.undoneButton}
+                style={[
+                  styles.undoneButton,
+                  isLoading && styles.buttonDisabled,
+                ]}
                 onPress={(e) => {
                   e.stopPropagation();
                   handleMarkIncomplete();
                 }}
                 activeOpacity={0.8}
+                disabled={isLoading}
               >
-                <Text style={styles.undoneButtonText}>Undone</Text>
+                {isLoading ? (
+                  <CubeSpinner size={20} color={Colors.cardBackground} />
+                ) : (
+                  <Text style={styles.undoneButtonText}>Undone</Text>
+                )}
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.doneButtonContainer}>
               <View style={styles.doneButtonShadowBox} />
               <TouchableOpacity
-                style={styles.doneButton}
+                style={[
+                  styles.doneButton,
+                  isLoading && styles.buttonDisabled,
+                ]}
                 onPress={(e) => {
                   e.stopPropagation();
                   handleMarkComplete();
                 }}
                 activeOpacity={0.8}
+                disabled={isLoading}
               >
-                <IconSymbol
-                  name="checkmark-done-sharp"
-                  library="Ionicons"
-                  size={16}
-                  color={Colors.cardBackground}
-                />
-                <View style={{ width: 6 }} />
-                <Text style={styles.doneButtonText}>Done</Text>
+                {isLoading ? (
+                  <CubeSpinner size={20} color={Colors.cardBackground} />
+                ) : (
+                  <>
+                    <IconSymbol
+                      name="checkmark-done-sharp"
+                      library="Ionicons"
+                      size={16}
+                      color={Colors.cardBackground}
+                    />
+                    <View style={{ width: 6 }} />
+                    <Text style={styles.doneButtonText}>Done</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
           )}
@@ -222,7 +234,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </View>
         </View>
       </TouchableOpacity>
-      {AlertModal}
     </View>
   );
 };
@@ -311,6 +322,10 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 1,
     minWidth: 70,
+    height: 36, // Fixed height to prevent resizing
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   doneButtonText: {
     ...Typography.caption,
@@ -456,6 +471,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 1,
     minWidth: 70,
+    height: 36, // Fixed height to prevent resizing
   },
   undoneButtonText: {
     ...Typography.caption,

@@ -17,8 +17,9 @@ import { Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { notificationService } from '@/src/core/notifications';
 import { NotificationHandler } from '@/src/core/notifications/NotificationHandler';
-import { useAppStore, useMedicationStore } from '@/src/core/store';
+import { useAppStore, useMedicationStore, useTaskStore, useFamilyStore } from '@/src/core/store';
 import { useAuthStore } from '@/src/core/store/authStore';
+import { useSubscriptionStore } from '@/src/core/store/subscriptionStore';
 import { Colors } from '@/src/features/shared/components';
 
 export const unstable_settings = {
@@ -29,7 +30,10 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { initialize, hasCompletedOnboarding, isInitialized } = useAppStore();
   const { loadMedications } = useMedicationStore();
+  const { loadTasks } = useTaskStore();
+  const { loadFamilyMembers } = useFamilyStore();
   const { isAuthenticated, checkAuth } = useAuthStore();
+  const { loadSubscription } = useSubscriptionStore();
 
   // Load Montserrat font
   const [fontsLoaded] = useFonts({
@@ -60,9 +64,14 @@ export default function RootLayout() {
         // Initialize app state (this handles preferences loading if authenticated)
         await initialize();
         
-        // Only load medications if authenticated
+        // Only load data if authenticated
         if (isAuthenticated) {
-          await loadMedications();
+          await Promise.all([
+            loadMedications(),
+            loadTasks(),
+            loadFamilyMembers(),
+            loadSubscription(),
+          ]);
         }
 
         // Request notification permissions
@@ -78,7 +87,6 @@ export default function RootLayout() {
   // Handle routing based on authentication and onboarding
   useEffect(() => {
     if (!isInitialized) return;
-    console.log(111111, isAuthenticated, hasCompletedOnboarding);
     if (!isAuthenticated) {
       router.replace('/auth/login');
     } else if (!hasCompletedOnboarding) {
@@ -150,6 +158,14 @@ export default function RootLayout() {
           options={{ 
             headerShown: false,
             presentation: 'card',
+          }} 
+        />
+        <Stack.Screen 
+          name="subscription/plans" 
+          options={{ 
+            headerShown: false,
+            presentation: 'card',
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 

@@ -1,7 +1,8 @@
 import { IconLibrary, IconSymbol } from '@/components/ui/icon-symbol';
+import { useMedicationStore, useSubscriptionStore, useTaskStore } from '@/src/core/store';
 import { router } from 'expo-router';
-import React from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Modal, StyleSheet, Text, TouchableOpacity, View, InteractionManager } from 'react-native';
 import { BorderRadius, Colors, Spacing, Typography } from './theme';
 
 interface FeatureOption {
@@ -63,12 +64,81 @@ export const FeatureSelectionModal: React.FC<FeatureSelectionModalProps> = ({
   visible,
   onClose,
 }) => {
+  const { medications } = useMedicationStore();
+  const { tasks } = useTaskStore();
+  const { plan, limits, loadSubscription } = useSubscriptionStore();
+
+  // Ensure subscription is loaded when modal opens (only once when visible changes)
+  useEffect(() => {
+    if (visible) {
+      // Use non-blocking load - will use cache if available
+      loadSubscription();
+    }
+  }, [visible]); // Removed loadSubscription, limits, plan from dependencies to prevent infinite loop
+
+  const checkLimit = (featureId: string): { isLimitReached: boolean; message?: string } => {
+    // Premium users have unlimited access
+    if (plan === 'premium') {
+      return { isLimitReached: false };
+    }
+
+    switch (featureId) {
+      case 'pill-reminder': {
+        const limit = limits?.medications ?? 3;
+        const currentCount = medications.length;
+        if (currentCount >= limit) {
+          return {
+            isLimitReached: true,
+            message: `You have reached the maximum number of medications (${limit}) for your plan. Upgrade to premium for unlimited medications.`,
+          };
+        }
+        return { isLimitReached: false };
+      }
+      case 'tasks': {
+        const limit = limits?.tasks ?? 5;
+        const currentCount = tasks.length;
+        if (currentCount >= limit) {
+          return {
+            isLimitReached: true,
+            message: `You have reached the maximum number of tasks (${limit}) for your plan. Upgrade to premium for unlimited tasks.`,
+          };
+        }
+        return { isLimitReached: false };
+      }
+      default:
+        return { isLimitReached: false };
+    }
+  };
+
   const handleFeatureSelect = (feature: FeatureOption) => {
     if (feature.disabled || !feature.route) {
       return;
     }
+
+    // Check subscription limits
+    const limitCheck = checkLimit(feature.id);
+    if (limitCheck.isLimitReached) {
+      // Close modal first
+      onClose();
+      
+      // Navigate directly to subscription plans (no intermediate alert)
+      InteractionManager.runAfterInteractions(() => {
+        setTimeout(() => {
+          router.push('/subscription/plans' as any);
+        }, 100);
+      });
+      return;
+    }
+
+    // Limit not reached, proceed with navigation
     onClose();
-    router.push(feature.route as any);
+    
+    // Use InteractionManager for smooth transition
+    InteractionManager.runAfterInteractions(() => {
+      setTimeout(() => {
+        router.push(feature.route as any);
+      }, 100);
+    });
   };
 
   return (

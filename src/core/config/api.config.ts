@@ -31,6 +31,7 @@ if (__DEV__) {
 }
 
 export const API_ENDPOINTS = {
+  base: API_BASE_URL,
   auth: {
     register: '/auth/register',
     login: '/auth/login',

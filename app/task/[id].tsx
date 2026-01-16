@@ -113,13 +113,37 @@ export default function TaskFormScreen() {
       const coinRewardNum = parseInt(coinReward, 10) || 10;
 
       if (isNew) {
-        await addTask({
+        const result = await addTask({
           title: title.trim(),
           description: description.trim(),
           coinReward: coinRewardNum,
           dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
           assigner: assigner || undefined,
         });
+
+        // Check if subscription limit was reached
+        if (!result.success && result.error === 'SUBSCRIPTION_LIMIT_REACHED') {
+          setLoading(false);
+          showAlert({
+            variant: 'alert',
+            title: "Task Limit Reached",
+            message: "You have reached the maximum number of tasks for your plan. Upgrade to premium for unlimited tasks.",
+            confirmText: "Upgrade",
+            cancelText: "OK",
+            showCancel: true,
+            onConfirm: () => {
+              router.push('/subscription/plans' as any);
+            },
+            onCancel: () => {
+              // Just close the alert
+            },
+          });
+          return;
+        }
+
+        if (!result.success) {
+          throw new Error('Failed to add task');
+        }
 
         alert.success('Task Created', 'Your task has been created successfully!', () => router.back());
       } else {

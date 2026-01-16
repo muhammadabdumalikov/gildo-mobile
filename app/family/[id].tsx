@@ -144,7 +144,7 @@ export default function FamilyMemberFormScreen() {
     setLoading(true);
     try {
       if (isNew) {
-        await addFamilyMember({
+        const result = await addFamilyMember({
           name: name.trim(),
           relationship,
           relationshipIcon,
@@ -152,6 +152,31 @@ export default function FamilyMemberFormScreen() {
           profileImageUri: profileImage,
           medications: [],
         });
+
+        // Check if subscription limit was reached
+        if (!result.success && result.error === 'SUBSCRIPTION_LIMIT_REACHED') {
+          setLoading(false);
+          showAlert({
+            variant: 'alert',
+            title: "Family Member Limit Reached",
+            message: "You have reached the maximum number of family members for your plan. Upgrade to premium for unlimited family members.",
+            confirmText: "Upgrade",
+            cancelText: "OK",
+            showCancel: true,
+            onConfirm: () => {
+              router.push('/subscription/plans' as any);
+            },
+            onCancel: () => {
+              // Just close the alert
+            },
+          });
+          return;
+        }
+
+        if (!result.success) {
+          throw new Error('Failed to add family member');
+        }
+
         alert.success(
           'Family Member Added',
           `${name} has been added to your family.`,
